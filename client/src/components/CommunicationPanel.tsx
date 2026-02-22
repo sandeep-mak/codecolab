@@ -1,3 +1,4 @@
+import { WS_BASE_URL } from '../config';
 // @ts-nocheck
 import React, { useState, useEffect, useRef } from 'react';
 import SimplePeer from 'simple-peer';

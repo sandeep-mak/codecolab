@@ -1,3 +1,4 @@
+import { WS_BASE_URL } from '../config';
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback, type ReactNode } from 'react';
 
 import { useAuth } from './AuthContext';

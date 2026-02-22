@@ -1,6 +1,6 @@
+import { API_BASE_URL } from '../config';
 import { useState, useEffect } from 'react';
 
-import { useAuth } from '../context/AuthContext';
 import { X, UserPlus, Check, Search } from 'lucide-react';
 
 interface Friend {

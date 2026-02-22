@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config';
 import React, { useState, useRef, useEffect } from 'react';
 
 import { X, Send, Bot, Code2, AlertCircle } from 'lucide-react';

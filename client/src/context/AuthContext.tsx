@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config';
 import { createContext, useContext, useState, useEffect } from 'react';
 
 import type { ReactNode } from 'react';
@@ -67,7 +68,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(null);
     };
 
-    const register = async (userData: any) => {
+    const register = async (_userData: any) => {
         // Registration logic is usually handled in component calling API directly, 
         // but context provides helper if needed. 
         // For now, allow direct API calls in components and use context only for state.
