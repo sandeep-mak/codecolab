@@ -1,4 +1,4 @@
-import { API_BASE_URL } from '../config';
+import { API_BASE_URL, YJS_WS_URL } from '../config';
 import { useState, useEffect, useRef } from 'react';
 
 import { useParams, useNavigate } from 'react-router-dom';
@@ -109,7 +109,7 @@ const EditorPage = () => {
         if (!docRef.current) {
             docRef.current = new Y.Doc();
             providerRef.current = new HocuspocusProvider({
-                url: 'ws://127.0.0.1:1234',
+                url: YJS_WS_URL,
                 name: id,
                 document: docRef.current,
                 token: token
@@ -319,7 +319,7 @@ const EditorPage = () => {
     };
 
     return (
-        <div className="flex h-screen bg-slate-950 text-white overflow-hidden relative">
+        <div className="flex h-[100dvh] bg-slate-950 text-white overflow-hidden relative">
             {/* Sidebar (File Explorer) */}
             <div className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col">
                 <div className="p-4 border-b border-slate-800 flex items-center justify-between">

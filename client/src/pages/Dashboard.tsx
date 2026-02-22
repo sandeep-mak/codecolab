@@ -141,8 +141,9 @@ const Dashboard = () => {
                 const senderId = data.senderId;
                 // Check if we are currently chatting with this sender
                 const currentlyOpen = activeChatRef.current?.id === senderId;
+                const isSentByMe = user?.id === senderId;
 
-                if (!currentlyOpen) {
+                if (!currentlyOpen && !isSentByMe) {
                     addNotification({
                         id: Date.now().toString(),
                         type: 'chat',

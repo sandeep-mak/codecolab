@@ -326,7 +326,7 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({ environmentId, 
     if (!isOpen) return null;
 
     return (
-        <div className="w-80 bg-slate-900 border-l border-slate-800 flex flex-col h-full absolute right-0 top-14 bottom-0 z-20 shadow-xl">
+        <div className="w-full sm:w-80 bg-slate-900 border-l border-slate-800 flex flex-col h-full absolute right-0 top-14 bottom-0 z-20 shadow-xl">
             {/* Tabs */}
             <div className="flex border-b border-slate-800">
                 <button

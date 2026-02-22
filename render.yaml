@@ -49,6 +49,35 @@ services:
     envVars:
       - key: VITE_API_BASE_URL
         sync: false
+      - key: VITE_WS_BASE_URL
+        sync: false
+      - key: VITE_YJS_WS_URL
+        fromService:
+          type: web
+          name: codecolab-yjs
+          property: host
+        # Assuming the property 'host' gives example.com, we need to prepend wss://
+        # Render's fromService automatically handles the host, but for Vite to use it as a WebSocket URL, 
+        # it might just be the host domain. We'll update the frontend config to handle this if needed, 
+        # but let's just pass the host for now. Actually, Render's host property is just the domain.
+        # We can also just set sync: false and let the user set it manually if fromService isn't enough,
+        # but we can try to use standard Render formatting or just tell the user to set it.
+        # Let's set sync: false so the user can easily set it in the dashboard.
+        sync: false
+
+  # ── WebSocket Server (Node.js Hocuspocus) ─────────────────────────────────
+  - type: web
+    name: codecolab-yjs
+    env: node
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    region: singapore
+    envVars:
+      - key: NODE_ENV
+        value: production
+
     routes:
       - type: rewrite
         source: /*

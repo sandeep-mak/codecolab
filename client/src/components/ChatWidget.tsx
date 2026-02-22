@@ -82,16 +82,10 @@ export default function ChatWidget({ friendId, friendName, onClose }: ChatWidget
 
         sendMessage(msg);
 
-        // Optimistic update
-        const optimisticMsg: ChatMessage = {
-            id: Date.now().toString(), // temp id
-            senderId: user!.id,
-            content: newMessage,
-            timestamp: new Date().toISOString()
-        };
-        setMessages((prev) => [...prev, optimisticMsg]);
+        // The server will echo the message back via WebSocket, so we don't
+        // append optimistically here, preventing duplicates.
         setNewMessage('');
-        scrollToBottom();
+        // No manual scrollToBottom needed here, the websocket listener handles it
     };
 
     return (
