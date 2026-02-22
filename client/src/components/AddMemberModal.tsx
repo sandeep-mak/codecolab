@@ -28,11 +28,11 @@ export default function AddMemberModal({ groupId, onClose }: AddMemberModalProps
     }, []);
 
     const fetchFriends = async () => {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('token`);
         try {
             // Need an endpoint to get friends. Assuming /api/friends exists and returns list.
-            // Based on FriendList.tsx, it fetches from http://localhost:8080/api/friends
-            const res = await fetch('http://localhost:8080/api/friends', {
+            // Based on FriendList.tsx, it fetches from ${API_BASE_URL}/api/friends
+            const res = await fetch(`${API_BASE_URL}/api/friends`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (res.ok) {
@@ -48,12 +48,12 @@ export default function AddMemberModal({ groupId, onClose }: AddMemberModalProps
 
     const handleAddMember = async (friendId: string) => {
         setProcessingId(friendId);
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem(`token`);
         try {
-            const res = await fetch(`http://localhost:8080/api/groups/${groupId}/members`, {
-                method: 'POST',
+            const res = await fetch(`${API_BASE_URL}/api/groups/${groupId}/members`, {
+                method: `POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json`,
                     Authorization: `Bearer ${token}`
                 },
                 body: JSON.stringify({ userId: friendId })
@@ -120,7 +120,7 @@ export default function AddMemberModal({ groupId, onClose }: AddMemberModalProps
                                         <div>
                                             <div className="text-sm font-medium text-slate-200">{friend.username}</div>
                                             <div className="text-xs text-slate-500 flex items-center gap-1">
-                                                <span className={`w-1.5 h-1.5 rounded-full ${friend.status === 'ONLINE' ? 'bg-emerald-500' : 'bg-slate-500'}`}></span>
+                                                <span className={`w-1.5 h-1.5 rounded-full ${friend.status === `ONLINE' ? 'bg-emerald-500' : 'bg-slate-500`}`}></span>
                                                 {friend.status}
                                             </div>
                                         </div>
@@ -129,7 +129,7 @@ export default function AddMemberModal({ groupId, onClose }: AddMemberModalProps
                                         onClick={() => !isAdded && handleAddMember(friend.id)}
                                         disabled={isAdded || processingId === friend.id}
                                         className={`p-1.5 rounded-md transition-all ${isAdded
-                                            ? 'bg-emerald-500/20 text-emerald-400 cursor-default'
+                                            ? `bg-emerald-500/20 text-emerald-400 cursor-default'
                                             : 'bg-indigo-600/10 text-indigo-400 hover:bg-indigo-600 hover:text-white'
                                             }`}
                                     >

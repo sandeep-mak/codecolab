@@ -23,7 +23,7 @@ export default function GroupList({ onSelectGroup, onCreateGroup, refreshTrigger
         const fetchGroups = async () => {
             const token = localStorage.getItem('token');
             try {
-                const res = await fetch('http://localhost:8080/api/groups', {
+                const res = await fetch(`${API_BASE_URL}/api/groups`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 if (res.ok) {

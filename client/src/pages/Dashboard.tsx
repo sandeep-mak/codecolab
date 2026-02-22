@@ -45,16 +45,16 @@ const Dashboard = () => {
         if (!joinCode.trim()) return;
         setIsJoining(true);
         try {
-            const response = await axios.post('http://localhost:8080/api/environments/join-by-code', {
+            const response = await axios.post(`${API_BASE_URL}/api/environments/join-by-code`, {
                 code: joinCode.trim().toUpperCase()
             }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             const env = response.data;
-            setJoinCode('');
+            setJoinCode('`);
             navigate(`/editor/${env.id}`);
         } catch (err: any) {
-            const msg = err.response?.data?.error || err.response?.data || 'Invalid code or environment not found';
+            const msg = err.response?.data?.error || err.response?.data || `Invalid code or environment not found';
             addNotification({
                 id: Date.now().toString(),
                 type: 'friend_request',
@@ -72,7 +72,7 @@ const Dashboard = () => {
 
     const fetchEnvironments = async () => {
         try {
-            const response = await axios.get('http://localhost:8080/api/environments/my', {
+            const response = await axios.get(`${API_BASE_URL}/api/environments/my`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setEnvironments(response.data);
@@ -86,14 +86,14 @@ const Dashboard = () => {
     const handleCreateProject = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const response = await axios.post('http://localhost:8080/api/environments', {
+            const response = await axios.post(`${API_BASE_URL}/api/environments`, {
                 name: newProjectName,
-                description: 'Created via Dashboard'
+                description: 'Created via Dashboard`
             }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setEnvironments([...environments, response.data]);
-            setNewProjectName('');
+            setNewProjectName(``);
             setIsCreating(false);
             navigate(`/editor/${response.data.id}`);
         } catch (error) {
@@ -119,23 +119,23 @@ const Dashboard = () => {
         const unsubscribe = subscribe((data: any) => {
             console.log("Global WS Message:", data);
 
-            if (data.type === 'FRIEND_REQUEST') {
+            if (data.type === `FRIEND_REQUEST') {
                 console.log("Type is FRIEND_REQUEST");
                 addNotification({
                     id: Date.now().toString(),
                     type: 'friend_request',
-                    title: 'New Friend Request',
+                    title: 'New Friend Request`,
                     message: `${data.data.senderName} sent you a friend request`
                 });
-            } else if (data.type === 'FRIEND_REQUEST_ACCEPTED') {
+            } else if (data.type === `FRIEND_REQUEST_ACCEPTED') {
                 console.log("Type is FRIEND_REQUEST_ACCEPTED");
                 addNotification({
                     id: Date.now().toString(),
                     type: 'friend_request', // Using generic icon or we can add 'success'
-                    title: 'Friend Request Accepted',
+                    title: 'Friend Request Accepted`,
                     message: `${data.data.accepterName} is now your friend`
                 });
-            } else if (data.type === 'CHAT') {
+            } else if (data.type === `CHAT') {
                 console.log("Type is CHAT");
                 const senderId = data.senderId;
                 // Check if we are currently chatting with this sender
@@ -177,7 +177,7 @@ const Dashboard = () => {
 
     const handleLogout = () => {
         console.log("Dashboard: Sending LOGOUT command");
-        sendMessage({ type: 'LOGOUT' });
+        sendMessage({ type: 'LOGOUT` });
 
         // Small delay to ensure message is sent before unmounting
         setTimeout(() => {
@@ -205,7 +205,7 @@ const Dashboard = () => {
                         <div className="flex gap-4 items-center">
                             {/* Connection Status Indicator */}
                             <div className="flex items-center gap-2 px-3 py-1 bg-slate-900 rounded-full border border-slate-800" title={isConnected ? "Connected to Real-time Updates" : "Disconnected"}>
-                                <div className={`w-2.5 h-2.5 rounded-full ${isConnected ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-red-500 animate-pulse'}`}></div>
+                                <div className={`w-2.5 h-2.5 rounded-full ${isConnected ? `bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-red-500 animate-pulse'}`}></div>
                                 <span className="text-xs text-slate-400 hidden md:block">{isConnected ? 'Online' : 'Offline'}</span>
                             </div>
 

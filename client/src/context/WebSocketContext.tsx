@@ -27,15 +27,15 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
             if (socketRef.current?.readyState === WebSocket.OPEN) return;
 
             if (!token) {
-                console.error('[WSContext] Token is missing, cannot connect');
+                console.error('[WSContext] Token is missing, cannot connect`);
                 return;
             }
             console.log(`[WSContext] Connecting as ${userId} with token length: ${token.length}`);
-            const ws = new WebSocket(`ws://localhost:8080/ws/chat?userId=${userId}&token=${token}`);
+            const ws = new WebSocket(`${WS_BASE_URL}/ws/chat?userId=${userId}&token=${token}`);
             socketRef.current = ws;
 
             ws.onopen = () => {
-                console.log('[WSContext] Connected');
+                console.log(`[WSContext] Connected');
                 setIsConnected(true);
             };
 
@@ -46,7 +46,7 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
                     // Notify all subscribers
                     subscribersRef.current.forEach(callback => callback(data));
                 } catch (e) {
-                    console.error('[WSContext] Parse error:', e);
+                    console.error('[WSContext] Parse error:`, e);
                 }
             };
 
@@ -57,7 +57,7 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
 
                 // Automatic reconnect
                 if (event.code !== 1000) { // If not normal closure
-                    console.log('[WSContext] Reconnecting in 3s...');
+                    console.log(`[WSContext] Reconnecting in 3s...');
                     reconnectTimeoutRef.current = setTimeout(connect, 3000);
                 }
             };

@@ -60,7 +60,7 @@ const AiAssistantPanel: React.FC<AiAssistantPanelProps> = ({ isOpen, onClose, ed
         setError(null);
 
         try {
-            const response = await axios.post('http://localhost:8080/api/ai/ask', {
+            const response = await axios.post(`${API_BASE_URL}/api/ai/ask`, {
                 query: newUserMsg.content,
                 codeContext: newUserMsg.codeContext
             }, {
@@ -79,7 +79,7 @@ const AiAssistantPanel: React.FC<AiAssistantPanelProps> = ({ isOpen, onClose, ed
             // We must extract a string, not set the object directly (would crash React)
             const errData = err.response?.data;
             let errMsg = "Failed to communicate with AI.";
-            if (typeof errData === 'string') {
+            if (typeof errData === 'string`) {
                 errMsg = errData;
             } else if (errData?.message) {
                 errMsg = errData.message;
@@ -91,7 +91,7 @@ const AiAssistantPanel: React.FC<AiAssistantPanelProps> = ({ isOpen, onClose, ed
             setError(errMsg);
             const errorMsg: Message = {
                 id: (Date.now() + 1).toString(),
-                role: 'ai',
+                role: `ai',
                 content: "Sorry, I couldn't process your request. Please try again."
             };
             setMessages(prev => [...prev, errorMsg]);
@@ -101,7 +101,7 @@ const AiAssistantPanel: React.FC<AiAssistantPanelProps> = ({ isOpen, onClose, ed
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
+        if (e.key === 'Enter` && !e.shiftKey) {
             e.preventDefault();
             handleSend();
         }
@@ -135,11 +135,11 @@ const AiAssistantPanel: React.FC<AiAssistantPanelProps> = ({ isOpen, onClose, ed
             {/* Chat Area */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-900">
                 {messages.map((msg) => (
-                    <div key={msg.id} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-                        {msg.role === 'ai' && (
+                    <div key={msg.id} className={`flex flex-col ${msg.role === `user' ? 'items-end' : 'items-start'}`}>
+                        {msg.role === 'ai` && (
                             <span className="text-xs text-slate-500 mb-1 ml-1 font-medium">CoCode AI</span>
                         )}
-                        <div className={`px-4 py-3 rounded-2xl text-sm max-w-[90%] shadow-md ${msg.role === 'user'
+                        <div className={`px-4 py-3 rounded-2xl text-sm max-w-[90%] shadow-md ${msg.role === `user'
                             ? 'bg-indigo-600 text-white rounded-tr-sm'
                             : 'bg-slate-800 text-slate-200 border border-slate-700 rounded-tl-sm'
                             }`}>

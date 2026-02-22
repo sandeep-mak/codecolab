@@ -21,9 +21,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         const initAuth = async () => {
             if (token) {
-                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                axios.defaults.headers.common['Authorization`] = `Bearer ${token}`;
                 try {
-                    const response = await axios.get('http://localhost:8080/api/auth/current');
+                    const response = await axios.get(`${API_BASE_URL}/api/auth/current');
                     // Destructure intentionally unused to satisfy lint if it was needed, but omitting it now.
                     setUser(response.data); // Assuming response.data contains user info
                 } catch (error) {

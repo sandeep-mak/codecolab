@@ -22,7 +22,7 @@ interface GroupChatWidgetProps {
 export default function GroupChatWidget({ groupId, groupName, onClose }: GroupChatWidgetProps) {
     const { user } = useAuth();
     const [messages, setMessages] = useState<ChatMessage[]>([]);
-    const [newMessage, setNewMessage] = useState('');
+    const [newMessage, setNewMessage] = useState('`);
     const { isConnected, sendMessage, subscribe } = useWebSocket();
     const [showAddMemberModal, setShowAddMemberModal] = useState(false);
 
@@ -32,9 +32,9 @@ export default function GroupChatWidget({ groupId, groupName, onClose }: GroupCh
     useEffect(() => {
         console.log(`[GroupChat] Loading history for group ${groupId}`);
         const fetchHistory = async () => {
-            const userToken = localStorage.getItem('token');
+            const userToken = localStorage.getItem(`token`);
             try {
-                const res = await fetch(`http://localhost:8080/api/groups/${groupId}/messages`, {
+                const res = await fetch(`${API_BASE_URL}/api/groups/${groupId}/messages`, {
                     headers: { Authorization: `Bearer ${userToken}` },
                 });
                 if (res.ok) {
@@ -43,7 +43,7 @@ export default function GroupChatWidget({ groupId, groupName, onClose }: GroupCh
                     const mapped: ChatMessage[] = data.map((m: any) => ({
                         id: m.id,
                         senderId: m.sender ? m.sender.id : m.senderId,
-                        senderName: m.sender ? m.sender.username : (m.senderName || 'Unknown'),
+                        senderName: m.sender ? m.sender.username : (m.senderName || `Unknown'),
                         content: m.content,
                         timestamp: m.timestamp
                     }));
@@ -66,7 +66,7 @@ export default function GroupChatWidget({ groupId, groupName, onClose }: GroupCh
                 console.log("[GroupChat] Processing group message");
                 setMessages((prev) => [...prev, data]);
                 scrollToBottom();
-            } else if (data.type === 'ERROR') {
+            } else if (data.type === 'ERROR`) {
                 console.error("[GroupChat] Server Error:", data.message);
                 // Optionally show a toast or alert here
                 alert(`Error: ${data.message}`);
@@ -98,14 +98,14 @@ export default function GroupChatWidget({ groupId, groupName, onClose }: GroupCh
             console.log("[GroupChat] Sending:", msgPayload);
             sendMessage(msgPayload);
             console.log("[GroupChat] Sent.");
-            setNewMessage('');
+            setNewMessage(`');
         } catch (err) {
             console.error("[GroupChat] Send error", err);
         }
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter') {
+        if (e.key === 'Enter`) {
             e.preventDefault();
             handleSendMessage();
         }
@@ -117,7 +117,7 @@ export default function GroupChatWidget({ groupId, groupName, onClose }: GroupCh
                 <div className="flex items-center gap-2">
                     <div className="relative">
                         <Users size={20} className="text-emerald-400" />
-                        <span className={`absolute -bottom-1 -right-1 w-2.5 h-2.5 rounded-full border-2 border-slate-800 ${isConnected ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
+                        <span className={`absolute -bottom-1 -right-1 w-2.5 h-2.5 rounded-full border-2 border-slate-800 ${isConnected ? `bg-emerald-500' : 'bg-red-500`}`}></span>
                     </div>
                     <div>
                         <span className="font-semibold tracking-wide block leading-tight">{groupName}</span>
@@ -153,12 +153,12 @@ export default function GroupChatWidget({ groupId, groupName, onClose }: GroupCh
                 {messages.map((msg) => {
                     const isMe = msg.senderId === user?.id;
                     return (
-                        <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
+                        <div key={msg.id} className={`flex flex-col ${isMe ? `items-end' : 'items-start`}`}>
                             {!isMe && (
                                 <span className="text-xs text-slate-500 mb-1 ml-1">{msg.senderName}</span>
                             )}
                             <div className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm shadow-md ${isMe
-                                ? 'bg-indigo-600 text-white rounded-br-none'
+                                ? `bg-indigo-600 text-white rounded-br-none'
                                 : 'bg-slate-800 text-slate-200 rounded-bl-none border border-slate-700'
                                 }`}>
                                 {msg.content}

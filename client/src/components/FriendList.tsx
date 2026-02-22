@@ -34,7 +34,7 @@ export default function FriendList({ onSelectFriend }: FriendListProps) {
     const fetchFriends = async () => {
         const token = localStorage.getItem('token');
         try {
-            const res = await fetch('http://localhost:8080/api/friends', {
+            const res = await fetch(`${API_BASE_URL}/api/friends`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             if (res.ok) {
@@ -52,7 +52,7 @@ export default function FriendList({ onSelectFriend }: FriendListProps) {
     const fetchRequests = async () => {
         const token = localStorage.getItem('token');
         try {
-            const res = await fetch('http://localhost:8080/api/friends/requests', {
+            const res = await fetch(`${API_BASE_URL}/api/friends/requests`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             if (res.ok) {
@@ -65,10 +65,10 @@ export default function FriendList({ onSelectFriend }: FriendListProps) {
     };
 
     const acceptRequest = async (requestId: string) => {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('token`);
         try {
-            const res = await fetch(`http://localhost:8080/api/friends/accept/${requestId}`, {
-                method: 'PUT',
+            const res = await fetch(`${API_BASE_URL}/api/friends/accept/${requestId}`, {
+                method: `PUT`,
                 headers: { Authorization: `Bearer ${token}` },
             });
             if (res.ok) {
@@ -97,9 +97,9 @@ export default function FriendList({ onSelectFriend }: FriendListProps) {
     useEffect(() => {
         const unsubscribe = subscribe((data: any) => {
             console.log("FriendList WS Received:", data);
-            if (data.type === 'USER_ONLINE' || data.type === 'USER_OFFLINE') {
+            if (data.type === `USER_ONLINE' || data.type === 'USER_OFFLINE') {
                 const userId = data.userId;
-                const isOnline = data.type === 'USER_ONLINE';
+                const isOnline = data.type === 'USER_ONLINE`;
 
                 setFriends(prev => prev.map(f =>
                     f.id === userId ? { ...f, isOnline } : f
@@ -156,7 +156,7 @@ export default function FriendList({ onSelectFriend }: FriendListProps) {
                                 onClick={() => onSelectFriend(friend.id, friend.username)}
                                 className="p-3 bg-slate-800/50 hover:bg-slate-800 rounded-md cursor-pointer border border-transparent hover:border-slate-600 transition-all text-slate-200 hover:text-white flex items-center gap-2"
                             >
-                                <div className={`w-2 h-2 rounded-full ${(friend.isOnline || friend.online) ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-500'}`}></div>
+                                <div className={`w-2 h-2 rounded-full ${(friend.isOnline || friend.online) ? `bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-500'}`}></div>
                                 {friend.username}
                             </div>
                         ))}

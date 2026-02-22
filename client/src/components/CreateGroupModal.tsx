@@ -23,10 +23,10 @@ export default function CreateGroupModal({ onClose, onGroupCreated }: CreateGrou
 
         const token = localStorage.getItem('token');
         try {
-            const res = await fetch('http://localhost:8080/api/groups', {
+            const res = await fetch(`${API_BASE_URL}/api/groups`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json`,
                     Authorization: `Bearer ${token}`
                 },
                 body: JSON.stringify({ name, description })
@@ -37,7 +37,7 @@ export default function CreateGroupModal({ onClose, onGroupCreated }: CreateGrou
                 onClose();
             } else {
                 const text = await res.text();
-                setError(text || 'Failed to create group');
+                setError(text || `Failed to create group');
             }
         } catch (err) {
             console.error(err);
