@@ -117,7 +117,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ doc, isReadOnly = false }) => {
 
     const handleClear = () => {
         if (isReadOnly || !yLinesRef.current) return;
-        if (window.confirm('Clear the entire whiteboard for everyone?`)) {
+        if (window.confirm('Clear the entire whiteboard for everyone?')) {
             const yLines = yLinesRef.current;
             yLines.delete(0, yLines.length);
         }
@@ -130,15 +130,15 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ doc, isReadOnly = false }) => {
                 {/* Tools */}
                 <div className="flex flex-col gap-2">
                     <button
-                        className={`p-2 rounded transition-colors ${tool === `pen' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-700'}`}
-                        onClick={() => setTool('pen`)}
+                        className={`p-2 rounded transition-colors ${tool === 'pen' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-700'}`}
+                        onClick={() => setTool('pen')}
                         title="Pen Tool"
                         disabled={isReadOnly}
                     >
                         <MousePointer2 size={18} />
                     </button>
                     <button
-                        className={`p-2 rounded transition-colors ${tool === `eraser' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-700'}`}
+                        className={`p-2 rounded transition-colors ${tool === 'eraser' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-700'}`}
                         onClick={() => setTool('eraser')}
                         title="Eraser"
                         disabled={isReadOnly}
@@ -151,10 +151,10 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ doc, isReadOnly = false }) => {
 
                 {/* Colors */}
                 <div className="flex flex-col gap-2">
-                    {['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#ffffff`].map(c => (
+                    {['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#ffffff'].map(c => (
                         <button
                             key={c}
-                            className={`w-8 h-8 rounded-full border-2 transition-transform ${color === c && tool === `pen' ? 'border-indigo-400 scale-110' : 'border-transparent'}`}
+                            className={`w-8 h-8 rounded-full border-2 transition-transform ${color === c && tool === 'pen' ? 'border-indigo-400 scale-110' : 'border-transparent'}`}
                             style={{ backgroundColor: c }}
                             onClick={() => { setTool('pen'); setColor(c); }}
                             disabled={isReadOnly}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { API_BASE_URL } from '../config';
+
 import { useParams, useNavigate } from 'react-router-dom';
 import Editor, { type OnMount } from '@monaco-editor/react';
 import axios from 'axios';
@@ -58,7 +58,7 @@ const EditorPage = () => {
     // Computed
     const isReadOnly = permission === 'VIEWER';
     const isAdmin = permission === 'ADMIN';
-    const canRun = permission === 'ADMIN' || permission === 'EDITOR`;
+    const canRun = permission === 'ADMIN' || permission === 'EDITOR';
 
     // Fetch Environment & Permissions
     useEffect(() => {
@@ -74,7 +74,7 @@ const EditorPage = () => {
                     setPermission(permRes.data);
                 } catch (err) {
                     console.warn("Failed to fetch permissions, defaulting to viewer", err);
-                    setPermission(`VIEWER`);
+                    setPermission('VIEWER');
                 }
 
                 // Fetch Environment
@@ -93,7 +93,7 @@ const EditorPage = () => {
                 } else {
                     toast.error("Failed to load environment");
                 }
-                navigate(`/dashboard');
+                navigate('/dashboard');
             }
         };
 
@@ -126,14 +126,14 @@ const EditorPage = () => {
                 states.forEach((state: any, clientId: number) => {
                     if (state.user && state.user.color) {
                         const color = state.user.color;
-                        const name = state.user.name || 'Anonymous`;
+                        const name = state.user.name || 'Anonymous';
                         css += `
                             .yRemoteSelection-${clientId} {
                                 background-color: ${color}33 !important;
                             }
                             .yRemoteSelectionHead-${clientId}::after {
                                 position: absolute;
-                                content: `${name}`;
+                                content: '${name}';
                                 background-color: ${color};
                                 color: white;
                                 font-size: 11px;
@@ -159,7 +159,7 @@ const EditorPage = () => {
                     }
                 });
 
-                let styleNode = document.getElementById(`yjs-cursors-style');
+                let styleNode = document.getElementById('yjs-cursors-style');
                 if (!styleNode) {
                     styleNode = document.createElement('style');
                     styleNode.id = 'yjs-cursors-style';
@@ -300,7 +300,7 @@ const EditorPage = () => {
 
             // Save whiteboard data
             if (docRef.current) {
-                const yLines = docRef.current.getArray('whiteboard-paths`);
+                const yLines = docRef.current.getArray('whiteboard-paths');
                 const data = JSON.stringify(yLines.toArray());
                 await axios.put(`${API_BASE_URL}/api/environments/${id}/whiteboard`, {
                     data
@@ -330,7 +330,7 @@ const EditorPage = () => {
                         <div
                             key={file.id}
                             onClick={() => setActiveFile(file)}
-                            className={`flex items-center gap-2 px-3 py-2 rounded cursor-pointer transition-colors ${activeFile?.id === file.id ? `bg-slate-800 text-indigo-400' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                            className={`flex items-center gap-2 px-3 py-2 rounded cursor-pointer transition-colors ${activeFile?.id === file.id ? 'bg-slate-800 text-indigo-400' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
                                 }`}
                         >
                             <FileCode size={16} />
@@ -358,15 +358,15 @@ const EditorPage = () => {
                     <div className="flex items-center gap-2">
                         <div className="flex bg-slate-800 p-0.5 rounded-lg border border-slate-700 mr-4">
                             <button
-                                onClick={() => setViewMode('code`)}
-                                className={`px-3 py-1 text-sm rounded-md transition-colors flex items-center gap-1.5 ${viewMode === `code' ? 'bg-slate-700 font-medium text-white shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'}`}
+                                onClick={() => setViewMode('code')}
+                                className={`px-3 py-1 text-sm rounded-md transition-colors flex items-center gap-1.5 ${viewMode === 'code' ? 'bg-slate-700 font-medium text-white shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'}`}
                             >
                                 <FileCode size={14} />
                                 Code
                             </button>
                             <button
-                                onClick={() => setViewMode('whiteboard`)}
-                                className={`px-3 py-1 text-sm rounded-md transition-colors flex items-center gap-1.5 ${viewMode === `whiteboard' ? 'bg-slate-700 font-medium text-white shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50`}`}
+                                onClick={() => setViewMode('whiteboard')}
+                                className={`px-3 py-1 text-sm rounded-md transition-colors flex items-center gap-1.5 ${viewMode === 'whiteboard' ? 'bg-slate-700 font-medium text-white shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'}`}
                             >
                                 <PenTool size={14} />
                                 Whiteboard
@@ -374,7 +374,7 @@ const EditorPage = () => {
                         </div>
                         <button
                             onClick={() => { setIsCommunicationOpen(!isCommunicationOpen); setIsAiPanelOpen(false); }}
-                            className={`px-3 py-1.5 rounded flex items-center gap-2 text-sm transition-colors border border-slate-700 mr-2 ${isCommunicationOpen ? `bg-indigo-600 text-white border-indigo-500' : 'bg-slate-800 hover:bg-slate-700 text-white`}`}
+                            className={`px-3 py-1.5 rounded flex items-center gap-2 text-sm transition-colors border border-slate-700 mr-2 ${isCommunicationOpen ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-800 hover:bg-slate-700 text-white'}`}
                         >
                             <MessageCircle size={16} />
                             Chat & Voice
@@ -382,7 +382,7 @@ const EditorPage = () => {
 
                         <button
                             onClick={() => { setIsAiPanelOpen(!isAiPanelOpen); setIsCommunicationOpen(false); }}
-                            className={`px-3 py-1.5 rounded flex items-center gap-2 text-sm transition-colors border border-slate-700 mr-2 ${isAiPanelOpen ? `bg-indigo-600 text-white border-indigo-500' : 'bg-slate-800 hover:bg-slate-700 text-white`}`}
+                            className={`px-3 py-1.5 rounded flex items-center gap-2 text-sm transition-colors border border-slate-700 mr-2 ${isAiPanelOpen ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-800 hover:bg-slate-700 text-white'}`}
                         >
                             <Bot size={16} />
                             Ask AI
@@ -401,15 +401,15 @@ const EditorPage = () => {
                         <button
                             onClick={handleSave}
                             disabled={isSaving || isReadOnly}
-                            className={`bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded flex items-center gap-2 text-sm transition-colors border border-slate-700 ${isReadOnly ? `opacity-50 cursor-not-allowed' : ''}`}
+                            className={`bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded flex items-center gap-2 text-sm transition-colors border border-slate-700 ${isReadOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                             <Save size={16} />
-                            {isSaving ? 'Saving...' : 'Save`}
+                            {isSaving ? 'Saving...' : 'Save'}
                         </button>
                         <button
                             onClick={handleRun}
                             disabled={isRunning || !canRun}
-                            className={`bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded flex items-center gap-2 text-sm transition-colors shadow-lg shadow-indigo-500/20 ${(!canRun) ? `opacity-50 cursor-not-allowed' : ''}`}
+                            className={`bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded flex items-center gap-2 text-sm transition-colors shadow-lg shadow-indigo-500/20 ${(!canRun) ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                             <Play size={16} />
                             {isRunning ? 'Running...' : 'Run'}

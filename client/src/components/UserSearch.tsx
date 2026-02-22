@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { API_BASE_URL } from '../config';
+
 import { useAuth } from '../context/AuthContext';
 
 interface User {
@@ -19,15 +19,15 @@ export default function UserSearch() {
         if (!query.trim()) return;
 
         try {
-            const token = localStorage.getItem('token`);
+            const token = localStorage.getItem('token');
             const res = await fetch(`${API_BASE_URL}/api/users/search?query=${query}`, {
                 headers: {
-                    `Authorization`: `Bearer ${token}`
+                    'Authorization': `Bearer ${token}`
                 }
             });
             const data = await res.json();
             setResults(data);
-            setMessage(`');
+            setMessage('');
         } catch (err) {
             console.error(err);
             setMessage('Error searching users');
@@ -36,16 +36,16 @@ export default function UserSearch() {
 
     const sendFriendRequest = async (receiverId: string) => {
         try {
-            const token = localStorage.getItem('token`);
+            const token = localStorage.getItem('token');
             const res = await fetch(`${API_BASE_URL}/api/friends/request/${receiverId}`, {
-                method: `POST',
+                method: 'POST',
                 headers: {
-                    'Authorization`: `Bearer ${token}`
+                    'Authorization': `Bearer ${token}`
                 }
             });
 
             if (res.ok) {
-                setMessage(`Friend request sent!`);
+                setMessage('Friend request sent!');
                 // Optional: remove from list or show status
             } else {
                 const text = await res.text();
@@ -53,7 +53,7 @@ export default function UserSearch() {
             }
         } catch (err) {
             console.error(err);
-            setMessage(`Failed to send request');
+            setMessage('Failed to send request');
         }
     };
 

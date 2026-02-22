@@ -3,7 +3,7 @@ import { API_BASE_URL } from '../config';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Bell, Check, CheckCheck, ExternalLink } from 'lucide-react';
-import { toast } from 'react-hot-toast`;
+import { toast } from 'react-hot-toast';
 
 interface Notification {
     id: string;
@@ -24,7 +24,7 @@ const NotificationBell = () => {
     const dropdownRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
 
-    const token = localStorage.getItem(`token`);
+    const token = localStorage.getItem('token');
     const headers = { Authorization: `Bearer ${token}` };
 
     const fetchNotifications = async () => {
@@ -38,7 +38,7 @@ const NotificationBell = () => {
             setNotifications(notifRes.data);
             setUnreadCount(countRes.data.count || 0);
         } catch (err) {
-            console.error(`Failed to fetch notifications', err);
+            console.error('Failed to fetch notifications', err);
         } finally {
             setLoading(false);
         }
@@ -59,7 +59,7 @@ const NotificationBell = () => {
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown`, handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
     const handleNotificationClick = async (notif: Notification) => {
@@ -70,13 +70,13 @@ const NotificationBell = () => {
                 setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, isRead: true } : n));
                 setUnreadCount(prev => Math.max(0, prev - 1));
             } catch (err) {
-                console.error(`Failed to mark notification as read', err);
+                console.error('Failed to mark notification as read', err);
             }
         }
 
         if (notif.linkUrl) {
             // Check if the environment still exists
-            const envId = notif.linkUrl.split('/editor/`)[1];
+            const envId = notif.linkUrl.split('/editor/')[1];
             if (envId) {
                 try {
                     await axios.get(`${API_BASE}/environments/${envId}`, { headers });
@@ -84,7 +84,7 @@ const NotificationBell = () => {
                     setOpen(false);
                 } catch (err: any) {
                     if (err.response?.status === 404 || err.response?.status === 400) {
-                        toast.error(`This environment no longer exists.`);
+                        toast.error('This environment no longer exists.');
                     } else {
                         navigate(notif.linkUrl);
                         setOpen(false);
@@ -103,7 +103,7 @@ const NotificationBell = () => {
             setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
             setUnreadCount(0);
         } catch (err) {
-            toast.error(`Failed to mark all as read');
+            toast.error('Failed to mark all as read');
         }
     };
 
@@ -111,7 +111,7 @@ const NotificationBell = () => {
         const date = new Date(dateStr);
         const now = new Date();
         const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
-        if (diff < 60) return 'just now`;
+        if (diff < 60) return 'just now';
         if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
         if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
         return `${Math.floor(diff / 86400)}d ago`;
@@ -131,7 +131,7 @@ const NotificationBell = () => {
                 <Bell size={20} />
                 {unreadCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-indigo-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold animate-pulse">
-                        {unreadCount > 9 ? `9+` : unreadCount}
+                        {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                 )}
             </button>
@@ -168,7 +168,7 @@ const NotificationBell = () => {
                                 <div
                                     key={notif.id}
                                     onClick={() => handleNotificationClick(notif)}
-                                    className={`px-4 py-3 border-b border-slate-700 cursor-pointer hover:bg-slate-700/50 transition-colors flex gap-3 items-start ${!notif.isRead ? `bg-indigo-950/30' : ''}
+                                    className={`px-4 py-3 border-b border-slate-700 cursor-pointer hover:bg-slate-700/50 transition-colors flex gap-3 items-start ${!notif.isRead ? 'bg-indigo-950/30' : ''}
                                         }`}
                                 >
                                     <div className="flex-1 min-w-0">

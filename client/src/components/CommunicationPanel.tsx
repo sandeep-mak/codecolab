@@ -61,7 +61,7 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({ environmentId, 
     const [isMuted, setIsMuted] = useState(false);
     const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
     const [inputText, setInputText] = useState('');
-    const [wsStatus, setWsStatus] = useState<'CONNECTING' | 'OPEN' | 'CLOSED'>('CONNECTING`);
+    const [wsStatus, setWsStatus] = useState<'CONNECTING' | 'OPEN' | 'CLOSED'>('CONNECTING');
     const [connectedPeers, setConnectedPeers] = useState<VoiceUser[]>([]);
 
     // Refs
@@ -78,7 +78,7 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({ environmentId, 
         const ws = new WebSocket(wsUrl);
 
         ws.onopen = () => {
-            console.log(`Signal WS Connected');
+            console.log('Signal WS Connected');
             setWsStatus('OPEN');
         };
 
@@ -329,15 +329,15 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({ environmentId, 
             {/* Tabs */}
             <div className="flex border-b border-slate-800">
                 <button
-                    onClick={() => setActiveTab('users`)}
-                    className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 ${activeTab === `users' ? 'text-indigo-400 border-b-2 border-indigo-400' : 'text-slate-400 hover:text-slate-200'}`}
+                    onClick={() => setActiveTab('users')}
+                    className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 ${activeTab === 'users' ? 'text-indigo-400 border-b-2 border-indigo-400' : 'text-slate-400 hover:text-slate-200'}`}
                 >
                     <Users size={16} />
                     Voice
                 </button>
                 <button
-                    onClick={() => setActiveTab('chat`)}
-                    className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 ${activeTab === `chat' ? 'text-indigo-400 border-b-2 border-indigo-400' : 'text-slate-400 hover:text-slate-200'}`}
+                    onClick={() => setActiveTab('chat')}
+                    className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 ${activeTab === 'chat' ? 'text-indigo-400 border-b-2 border-indigo-400' : 'text-slate-400 hover:text-slate-200'}`}
                 >
                     <MessageSquare size={16} />
                     Chat
@@ -346,10 +346,10 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({ environmentId, 
 
             {/* Content */}
             <div className="flex-1 overflow-hidden flex flex-col">
-                {activeTab === 'users` && (
+                {activeTab === 'users' && (
                     <div className="p-4 flex flex-col items-center">
                         <div className="mb-6 text-center">
-                            <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-2 mx-auto transition-all ${isVoiceActive ? `bg-green-500/20 text-green-400 ring-2 ring-green-500/50' : 'bg-slate-800 text-slate-500'}`}>
+                            <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-2 mx-auto transition-all ${isVoiceActive ? 'bg-green-500/20 text-green-400 ring-2 ring-green-500/50' : 'bg-slate-800 text-slate-500'}`}>
                                 {isVoiceActive ? (isMuted ? <MicOff size={32} /> : <Mic size={32} />) : <MicOff size={32} />}
                             </div>
                             <h3 className="text-slate-200 font-medium">{isVoiceActive ? 'Voice Connected' : 'Voice Disconnected'}</h3>
@@ -358,22 +358,22 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({ environmentId, 
 
                         <div className="flex gap-2 w-full">
                             <button
-                                disabled={wsStatus !== 'OPEN`}
+                                disabled={wsStatus !== 'OPEN'}
                                 onClick={isVoiceActive ? leaveVoice : joinVoice}
-                                className={`flex-1 py-2 px-4 rounded font-medium transition-colors ${wsStatus !== `OPEN'
+                                className={`flex-1 py-2 px-4 rounded font-medium transition-colors ${wsStatus !== 'OPEN'
                                     ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
                                     : isVoiceActive
                                         ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/50'
                                         : 'bg-indigo-600 text-white hover:bg-indigo-500 shadow-lg shadow-indigo-500/20'
                                     }`}
                             >
-                                {wsStatus !== 'OPEN' ? 'Connecting...' : (isVoiceActive ? 'Leave Voice' : 'Join Voice`)}
+                                {wsStatus !== 'OPEN' ? 'Connecting...' : (isVoiceActive ? 'Leave Voice' : 'Join Voice')}
                             </button>
                             {isVoiceActive && (
                                 <button
                                     onClick={toggleMute}
                                     className={`p-2 rounded font-medium transition-colors border ${isMuted
-                                        ? `bg-red-500/10 text-red-400 border-red-500/50'
+                                        ? 'bg-red-500/10 text-red-400 border-red-500/50'
                                         : 'bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-600'
                                         }`}
                                     title={isMuted ? "Unmute" : "Mute"}
@@ -403,17 +403,17 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({ environmentId, 
                     </div>
                 )}
 
-                {activeTab === 'chat` && (
+                {activeTab === 'chat' && (
                     <>
                         <div className="flex-1 overflow-y-auto p-4 space-y-3">
                             {chatMessages.map((msg) => (
-                                <div key={msg.id} className={`flex flex-col ${msg.senderName === user.username ? `items-end' : 'items-start'}`}>
+                                <div key={msg.id} className={`flex flex-col ${msg.senderName === user.username ? 'items-end' : 'items-start'}`}>
                                     <div className="flex items-baseline gap-2 mb-1">
                                         <span className="text-xs font-bold text-slate-300">{msg.senderName}</span>
-                                        <span className="text-[10px] text-slate-600">{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit` })}</span>
+                                        <span className="text-[10px] text-slate-600">{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                     </div>
                                     <div className={`px-3 py-2 rounded-lg text-sm max-w-[85%] break-words ${msg.senderName === user.username
-                                        ? `bg-indigo-600 text-white rounded-br-none'
+                                        ? 'bg-indigo-600 text-white rounded-br-none'
                                         : 'bg-slate-800 text-slate-200 rounded-bl-none'
                                         }`}>
                                         {msg.content}
@@ -435,8 +435,8 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({ environmentId, 
                                 />
                                 <button
                                     onClick={sendChatMessage}
-                                    disabled={wsStatus !== 'OPEN`}
-                                    className={`bg-indigo-600 hover:bg-indigo-500 text-white p-2 rounded-md transition-colors ${wsStatus !== `OPEN' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    disabled={wsStatus !== 'OPEN'}
+                                    className={`bg-indigo-600 hover:bg-indigo-500 text-white p-2 rounded-md transition-colors ${wsStatus !== 'OPEN' ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 >
                                     <Send size={16} />
                                 </button>

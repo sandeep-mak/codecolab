@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { API_BASE_URL } from '../config';
+
 import axios from 'axios';
 import { X, UserPlus, Trash2, Shield, Activity as ActivityIcon, Copy, Check } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -28,7 +28,7 @@ const ShareModal = ({ environmentId, isOpen, onClose }: ShareModalProps) => {
     const [inviteRole, setInviteRole] = useState<'VIEWER' | 'EDITOR' | 'ADMIN'>('VIEWER');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [activeTab, setActiveTab] = useState<'permissions' | 'audit'>('permissions`);
+    const [activeTab, setActiveTab] = useState<'permissions' | 'audit'>('permissions');
     const [joinCode, setJoinCode] = useState<string | null>(null);
     const [codeCopied, setCodeCopied] = useState(false);
 
@@ -46,7 +46,7 @@ const ShareModal = ({ environmentId, isOpen, onClose }: ShareModalProps) => {
             });
             setJoinCode(res.data.joinCode || null);
         } catch (err) {
-            console.error(`Failed to fetch environment`, err);
+            console.error('Failed to fetch environment', err);
         }
     };
 
@@ -73,7 +73,7 @@ const ShareModal = ({ environmentId, isOpen, onClose }: ShareModalProps) => {
     const handleInvite = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        setError(``);
+        setError('');
         try {
             await axios.post(`${API_BASE_URL}/api/environments/${environmentId}/permissions`, {
                 usernameOrEmail: inviteUsername.trim(),
@@ -81,7 +81,7 @@ const ShareModal = ({ environmentId, isOpen, onClose }: ShareModalProps) => {
             }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            setInviteUsername(`');
+            setInviteUsername('');
             fetchPermissions();
         } catch (err: any) {
             console.error("Invite failed", err);
@@ -92,7 +92,7 @@ const ShareModal = ({ environmentId, isOpen, onClose }: ShareModalProps) => {
         }
     };
 
-    const handleUpdatePermission = async (usernameOrEmail: string, newRole: 'VIEWER' | 'EDITOR' | 'ADMIN`) => {
+    const handleUpdatePermission = async (usernameOrEmail: string, newRole: 'VIEWER' | 'EDITOR' | 'ADMIN') => {
         try {
             await axios.post(`${API_BASE_URL}/api/environments/${environmentId}/permissions`, {
                 usernameOrEmail: usernameOrEmail,
@@ -135,14 +135,14 @@ const ShareModal = ({ environmentId, isOpen, onClose }: ShareModalProps) => {
 
                 <div className="flex border-b border-slate-700 mb-6">
                     <button
-                        className={`flex-1 py-3 text-sm font-medium transition-colors border-b-2 flex justify-center items-center gap-2 ${activeTab === `permissions' ? 'text-indigo-400 border-indigo-500 bg-indigo-500/5' : 'text-slate-400 border-transparent hover:text-slate-200'
+                        className={`flex-1 py-3 text-sm font-medium transition-colors border-b-2 flex justify-center items-center gap-2 ${activeTab === 'permissions' ? 'text-indigo-400 border-indigo-500 bg-indigo-500/5' : 'text-slate-400 border-transparent hover:text-slate-200'
                             }`}
-                        onClick={() => setActiveTab('permissions`)}
+                        onClick={() => setActiveTab('permissions')}
                     >
                         <Shield size={16} /> Manage Access
                     </button>
                     <button
-                        className={`flex-1 py-3 text-sm font-medium transition-colors border-b-2 flex justify-center items-center gap-2 ${activeTab === `audit' ? 'text-indigo-400 border-indigo-500 bg-indigo-500/5' : 'text-slate-400 border-transparent hover:text-slate-200'
+                        className={`flex-1 py-3 text-sm font-medium transition-colors border-b-2 flex justify-center items-center gap-2 ${activeTab === 'audit' ? 'text-indigo-400 border-indigo-500 bg-indigo-500/5' : 'text-slate-400 border-transparent hover:text-slate-200'
                             }`}
                         onClick={() => setActiveTab('audit')}
                     >

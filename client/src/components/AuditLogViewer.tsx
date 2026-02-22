@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { API_BASE_URL } from '../config';
+
 import axios from 'axios';
 import { Activity } from 'lucide-react';
 
@@ -20,7 +20,7 @@ interface AuditLogViewerProps {
 const AuditLogViewer: React.FC<AuditLogViewerProps> = ({ environmentId, token }) => {
     const [logs, setLogs] = useState<AuditLog[]>([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('`);
+    const [error, setError] = useState('');
 
     useEffect(() => {
         const fetchLogs = async () => {
@@ -33,7 +33,7 @@ const AuditLogViewer: React.FC<AuditLogViewerProps> = ({ environmentId, token })
                 console.error("Failed to fetch audit logs", err);
                 const errData = err.response?.data;
                 let errMsg = "Failed to load activity logs.";
-                if (typeof errData === `string`) {
+                if (typeof errData === 'string') {
                     errMsg = errData;
                 } else if (errData?.message) {
                     errMsg = errData.message;
@@ -75,7 +75,7 @@ const AuditLogViewer: React.FC<AuditLogViewerProps> = ({ environmentId, token })
                     logs.map(log => (
                         <div key={log.id} className="bg-slate-800/80 p-3 rounded-lg border border-slate-700">
                             <div className="flex justify-between items-start mb-1">
-                                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${log.action.includes(`CREATED') ? 'bg-emerald-500/20 text-emerald-400' :
+                                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${log.action.includes('CREATED') ? 'bg-emerald-500/20 text-emerald-400' :
                                         log.action === 'CODE_EXECUTED' ? 'bg-amber-500/20 text-amber-400' :
                                             log.action === 'FILE_SAVED' ? 'bg-blue-500/20 text-blue-400' :
                                                 log.action.includes('REVOKED') || log.action.includes('DELETED') ? 'bg-red-500/20 text-red-400' :
