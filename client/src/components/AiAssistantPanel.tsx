@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { API_BASE_URL } from '../config';
 import { X, Send, Bot, Code2, AlertCircle } from 'lucide-react';
 import axios from 'axios';
 

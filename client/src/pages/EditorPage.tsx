@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { API_BASE_URL } from '../config';
 import { useParams, useNavigate } from 'react-router-dom';
 import Editor, { type OnMount } from '@monaco-editor/react';
 import axios from 'axios';

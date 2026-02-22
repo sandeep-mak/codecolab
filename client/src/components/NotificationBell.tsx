@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { API_BASE_URL } from '../config';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Bell, Check, CheckCheck, ExternalLink } from 'lucide-react';
@@ -13,7 +14,7 @@ interface Notification {
     createdAt: string;
 }
 
-const API_BASE = 'http://localhost:8080/api';
+const API_BASE = `${API_BASE_URL}/api`;
 
 const NotificationBell = () => {
     const [notifications, setNotifications] = useState<Notification[]>([]);

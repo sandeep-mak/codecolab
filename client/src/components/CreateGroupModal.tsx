@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { API_BASE_URL } from '../config';
 import { useAuth } from '../context/AuthContext';
 import { X, Users } from 'lucide-react';
 

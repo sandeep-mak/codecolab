@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback, type ReactNode } from 'react';
+import { API_BASE_URL } from '../config';
 import { useAuth } from './AuthContext';
 
 interface WebSocketContextType {
