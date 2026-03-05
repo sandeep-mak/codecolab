@@ -166,7 +166,7 @@ const Dashboard = () => {
         return () => {
             unsubscribe();
         };
-    }, [subscribe]);
+    }, [subscribe, user?.id]);
 
     const addNotification = (note: AppNotification) => {
         console.log("Adding notification:", note);

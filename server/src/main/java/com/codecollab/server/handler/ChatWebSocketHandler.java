@@ -217,7 +217,9 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                     String jsonResponse = objectMapper.writeValueAsString(response);
                     sendToUser(receiverId, jsonResponse);
                     // Also send back to sender so they see their own message if not optimistic
-                    sendToUser(senderId, jsonResponse);
+                    if (!senderId.equals(receiverId)) {
+                        sendToUser(senderId, jsonResponse);
+                    }
                 } else {
                     System.err.println("WS: Receiver not found: " + receiverId);
                 }

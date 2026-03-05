@@ -57,7 +57,11 @@ export default function ChatWidget({ friendId, friendName, onClose }: ChatWidget
         const unsubscribe = subscribe((data: any) => {
             // Check if message is from current friend
             if (data.senderId === friendId || data.senderId === user?.id) {
-                setMessages((prev) => [...prev, data]);
+                setMessages((prev) => {
+                    // Deduplicate identical messages from WebSocket rebroadcasts
+                    if (prev.some(m => m.id === data.id)) return prev;
+                    return [...prev, data];
+                });
                 scrollToBottom();
             }
         });
