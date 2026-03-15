@@ -23,6 +23,7 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.Optional;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -161,6 +162,47 @@ public class EnvironmentController {
 
         return ResponseEntity.ok(env);
     }
+
+    /**
+     * POST /api/environments/{id}/files
+     * Body: { "name": "filename.js", "content": "..." }
+     * Creates a new file in the environment.
+     */
+    @PostMapping("/{id}/files")
+    public ResponseEntity<?> createFile(@PathVariable UUID id, @Valid @RequestBody NewFileRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        User user = userRepository.findById(userDetails.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Environment env = environmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Environment not found"));
+
+        // Only owner or EDITOR can create files
+        if (env.getOwnerId() != null && !env.getOwnerId().equals(user.getId())) {
+             if (!permissionService.hasPermission(env.getId(), user.getId(), EnvironmentPermission.AccessLevel.EDITOR) &&
+                 !permissionService.hasPermission(env.getId(), user.getId(), EnvironmentPermission.AccessLevel.ADMIN)) {
+                 return ResponseEntity.status(403).body(Map.of("error", "You do not have permission to create files in this environment"));
+             }
+        }
+
+        File newFile = new File(request.getName(), request.getContent(), env);
+        env.getFiles().add(newFile);
+        
+        // This will cascade save the new file
+        Environment savedEnv = environmentRepository.save(env);
+        
+        // Find the newly saved file to return (since the ID gets generated on save)
+        File savedFile = savedEnv.getFiles().stream()
+                .filter(f -> f.getName().equals(request.getName()))
+                .reduce((first, second) -> second) // get the last inserted if duplicates exist, though we try to prevent them
+                .orElseThrow(() -> new RuntimeException("Failed to save file"));
+
+        auditService.logAction(user.getId(), "FILE_CREATED", savedEnv.getId().toString(),
+                user.getUsername() + " created file '" + newFile.getName() + "'");
+
+        return ResponseEntity.ok(savedFile);
+    }
 }
 
 class EnvironmentRequest {
@@ -220,5 +262,28 @@ class JoinByCodeRequest {
 
     public void setCode(String code) {
         this.code = code;
+    }
+}
+
+class NewFileRequest {
+    @NotBlank(message = "File name cannot be blank")
+    private String name;
+
+    private String content;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
     }
 }

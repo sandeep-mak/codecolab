@@ -12,7 +12,7 @@ import CommunicationPanel from '../components/CommunicationPanel';
 import ShareModal from '../components/ShareModal';
 import Whiteboard from '../components/Whiteboard';
 import AiAssistantPanel from '../components/AiAssistantPanel';
-import { Save, Play, FileCode, Terminal, Share2, MessageCircle, Plus, PenTool, Bot } from 'lucide-react';
+import { Save, Play, FileCode, Terminal, Share2, MessageCircle, Plus, PenTool, Bot, Home, LogOut } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 interface File {
@@ -318,13 +318,51 @@ const EditorPage = () => {
         }
     };
 
+    // Create New File
+    const handleCreateFile = async () => {
+        if (!id || !token || !canRun) return; 
+        
+        const fileName = window.prompt("Enter new file name (e.g., utils.py):");
+        if (!fileName || !fileName.trim()) return;
+
+        if (files.some(f => f.name.toLowerCase() === fileName.trim().toLowerCase())) {
+            toast.error("A file with this name already exists");
+            return;
+        }
+
+        try {
+            const response = await axios.post(`${API_BASE_URL}/api/environments/${id}/files`, {
+                name: fileName.trim(),
+                content: "# New file"
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            const newFile = response.data;
+            setFiles([...files, newFile]);
+            setActiveFile(newFile);
+            toast.success("File created");
+        } catch (error) {
+            console.error("Failed to create file:", error);
+            toast.error("Failed to create file");
+        }
+    };
+
     return (
         <div className="flex h-[100dvh] bg-slate-950 text-white overflow-hidden relative">
             {/* Sidebar (File Explorer) */}
             <div className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col">
                 <div className="p-4 border-b border-slate-800 flex items-center justify-between">
                     <span className="font-semibold text-slate-200">Explorer</span>
-                    <button className="text-slate-400 hover:text-white"><Plus size={16} /></button>
+                    {canRun && (
+                        <button 
+                            onClick={handleCreateFile}
+                            className="text-slate-400 hover:text-white p-1 hover:bg-slate-800 rounded transition-colors"
+                            title="New File"
+                        >
+                            <Plus size={16} />
+                        </button>
+                    )}
                 </div>
                 <div className="flex-1 overflow-y-auto p-2">
                     {files.map(file => (
@@ -342,9 +380,9 @@ const EditorPage = () => {
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col relative z-10 transition-all duration-300" style={{ marginRight: isCommunicationOpen || isAiPanelOpen ? '320px' : '0' }}>
+            <div className="flex-1 flex flex-col relative z-8 w-full h-full overflow-hidden">
                 {/* Header / Toolbar */}
-                <div className="h-14 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-4">
+                <div className="h-14 bg-slate-900 flex-shrink-0 border-b border-slate-800 flex items-center justify-between px-4">
                     <div className="text-sm font-medium text-slate-300 flex items-center gap-2">
                         <span className="text-slate-500">{environment?.name || 'Loading...'}</span>
                         <span className="text-slate-600">/</span>
@@ -407,6 +445,7 @@ const EditorPage = () => {
                             <Save size={16} />
                             {isSaving ? 'Saving...' : 'Save'}
                         </button>
+
                         <button
                             onClick={handleRun}
                             disabled={isRunning || !canRun}
@@ -414,6 +453,24 @@ const EditorPage = () => {
                         >
                             <Play size={16} />
                             {isRunning ? 'Running...' : 'Run'}
+                        </button>
+
+                        <div className="w-px h-6 bg-slate-700 mx-1"></div>
+
+                        <button
+                            onClick={() => window.open('/dashboard', '_blank')}
+                            className="bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white p-1.5 rounded transition-colors border border-slate-700 mx-1"
+                            title="Open Dashboard in New Tab"
+                        >
+                            <Home size={16} />
+                        </button>
+                        
+                        <button
+                            onClick={() => navigate('/dashboard')}
+                            className="bg-red-500/10 hover:bg-red-500/20 text-red-400 p-1.5 rounded transition-colors border border-red-500/30 ml-1"
+                            title="Leave Environment"
+                        >
+                            <LogOut size={16} />
                         </button>
                     </div>
                 </div>

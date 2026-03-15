@@ -326,22 +326,29 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({ environmentId, 
     if (!isOpen) return null;
 
     return (
-        <div className="w-full sm:w-80 bg-slate-900 border-l border-slate-800 flex flex-col h-full absolute right-0 top-14 bottom-0 z-20 shadow-xl">
-            {/* Tabs */}
-            <div className="flex border-b border-slate-800">
+        <div className="fixed right-4 bottom-4 top-20 w-80 bg-slate-900 border border-slate-700 rounded-xl overflow-hidden shadow-2xl z-50 flex flex-col transition-all">
+            {/* Tabs & Header */}
+            <div className="flex border-b border-slate-800 bg-slate-800/50">
                 <button
                     onClick={() => setActiveTab('users')}
-                    className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 ${activeTab === 'users' ? 'text-indigo-400 border-b-2 border-indigo-400' : 'text-slate-400 hover:text-slate-200'}`}
+                    className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 ${activeTab === 'users' ? 'text-indigo-400 border-b-2 border-indigo-400 bg-slate-800' : 'text-slate-400 hover:text-slate-200'}`}
                 >
                     <Users size={16} />
                     Voice
                 </button>
                 <button
                     onClick={() => setActiveTab('chat')}
-                    className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 ${activeTab === 'chat' ? 'text-indigo-400 border-b-2 border-indigo-400' : 'text-slate-400 hover:text-slate-200'}`}
+                    className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 ${activeTab === 'chat' ? 'text-indigo-400 border-b-2 border-indigo-400 bg-slate-800' : 'text-slate-400 hover:text-slate-200'}`}
                 >
                     <MessageSquare size={16} />
                     Chat
+                </button>
+                <button 
+                    onClick={onClose}
+                    className="px-4 text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors flex items-center justify-center"
+                    title="Close Panel"
+                >
+                    <X size={18} />
                 </button>
             </div>
 

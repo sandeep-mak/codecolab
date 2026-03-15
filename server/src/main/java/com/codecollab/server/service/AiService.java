@@ -58,7 +58,7 @@ public class AiService {
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
         String endpoint = baseUrl + "/chat/completions";
 
-        System.out.println("[AiService] Calling Gemini endpoint: " + endpoint);
+        System.out.println("[AiService] Calling AI API endpoint: " + endpoint);
         System.out.println("[AiService] Model: " + model);
 
         try {
@@ -66,7 +66,7 @@ public class AiService {
             Map<String, Object> response = restTemplate.postForObject(endpoint, entity, Map.class);
 
             if (response == null) {
-                System.err.println("[AiService] Received null response from Gemini API");
+                System.err.println("[AiService] Received null response from AI API");
                 return "No response from AI.";
             }
 
@@ -84,10 +84,10 @@ public class AiService {
 
         } catch (HttpClientErrorException e) {
             System.err.println(
-                    "[AiService] Gemini API client error " + e.getStatusCode() + ": " + e.getResponseBodyAsString());
-            throw new RuntimeException("Gemini API error " + e.getStatusCode() + ": " + e.getResponseBodyAsString(), e);
+                    "[AiService] AI API client error (" + model + ") " + e.getStatusCode() + ": " + e.getResponseBodyAsString());
+            throw new RuntimeException("AI API error " + e.getStatusCode() + ": " + e.getResponseBodyAsString(), e);
         } catch (Exception e) {
-            System.err.println("[AiService] Unexpected error calling Gemini: " + e.getMessage());
+            System.err.println("[AiService] Unexpected error calling AI API: " + e.getMessage());
             throw new RuntimeException("AI call failed: " + e.getMessage(), e);
         }
     }
