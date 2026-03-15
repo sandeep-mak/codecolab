@@ -22,9 +22,11 @@ public class CodeExecutionService {
             }
 
             // 2. Build the process
-            // Detect OS to determine python command (python vs python3)
-            String pythonCmd = "python"; // Default for Windows usually
-            // On some systems it might be python3. We can make this configurable.
+            // Detect OS to determine python command
+            String pythonCmd = "python"; 
+            if (!System.getProperty("os.name").toLowerCase().contains("win")) {
+                pythonCmd = "python3"; // Use python3 on Linux/Mac (like the Docker image)
+            }
 
             ProcessBuilder pb = new ProcessBuilder(pythonCmd, tempFile.getAbsolutePath());
             pb.redirectErrorStream(true); // Merge stderr into stdout

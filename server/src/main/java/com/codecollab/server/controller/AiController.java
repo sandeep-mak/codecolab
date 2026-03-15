@@ -31,8 +31,14 @@ public class AiController {
             if (e.getCause() != null) {
                 System.err.println("[AiController] Caused by: " + e.getCause().getMessage());
             }
+            
+            String errorMsg = e.getMessage();
+            if (errorMsg != null && errorMsg.contains("401")) {
+                errorMsg = "Invalid AI API Key (401 Unauthorized). Please check your GROQ_API_KEY setting in the Render dashboard.";
+            }
+            
             return ResponseEntity.internalServerError()
-                    .body("AI service error: " + e.getMessage());
+                    .body("AI service error: " + errorMsg);
         }
     }
 }

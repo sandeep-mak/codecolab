@@ -2,7 +2,7 @@
 import { WS_BASE_URL } from '../config';
 import React, { useState, useEffect, useRef } from 'react';
 import SimplePeer from 'simple-peer';
-import { Mic, MicOff, Send, Users, MessageSquare } from 'lucide-react';
+import { Mic, MicOff, Send, Users, MessageSquare, X } from 'lucide-react';
 // @ts-ignore
 import * as process from 'process';
 import { Buffer } from 'buffer';
