@@ -182,7 +182,13 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({ environmentId, 
     const createPeer = (targetSessionId: string, stream: MediaStream) => {
         const peer = new SimplePeer({
             initiator: true,
-            trickle: false,
+            trickle: true,
+            config: {
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:global.stun.twilio.com:3478' }
+                ]
+            },
             stream: stream
         });
 
@@ -217,7 +223,13 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({ environmentId, 
     const addPeer = (senderSessionId: string, incomingSignal: any, stream: MediaStream) => {
         const peer = new SimplePeer({
             initiator: false,
-            trickle: false,
+            trickle: true,
+            config: {
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:global.stun.twilio.com:3478' }
+                ]
+            },
             stream: stream
         });
 
