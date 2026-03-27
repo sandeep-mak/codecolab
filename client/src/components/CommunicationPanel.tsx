@@ -64,6 +64,7 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({ environmentId, 
     const [inputText, setInputText] = useState('');
     const [wsStatus, setWsStatus] = useState<'CONNECTING' | 'OPEN' | 'CLOSED'>('CONNECTING');
     const [connectedPeers, setConnectedPeers] = useState<VoiceUser[]>([]);
+    const [audioStreams, setAudioStreams] = useState<{ id: string, stream: MediaStream }[]>([]);
 
     // Refs
     const wsRef = useRef<WebSocket | null>(null);
@@ -126,23 +127,46 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({ environmentId, 
                 removePeer(message.leaverId);
                 break;
             case 'SIGNAL':
-                // console.log('Received signal from:', message.senderId);
-                const item = peersRef.current.find(p => p.peerId === message.senderId);
+                let item = peersRef.current.find(p => p.peerId === message.senderId);
+                const senderName = message.senderName || 'Unknown';
+
                 if (item) {
-                    item.peer.signal(message.data);
-                } else {
+                    // Check for WebRTC Glare (both initiated simultaneously)
+                    if (message.data.type === 'offer' && item.peer.initiator) {
+                        // Tie breaker using username
+                        if (user.username > senderName) {
+                            console.log("Glare detected. I win, ignoring remote offer from", senderName);
+                            break; // My offer is on the way, they will yield
+                        } else {
+                            console.log("Glare detected. I lose, yielding to remote offer from", senderName);
+                            item.peer.destroy();
+                            peersRef.current = peersRef.current.filter(p => p.peerId !== message.senderId);
+                            item = undefined; // Act as if no peer exists to let addPeer take over
+                        }
+                    } else {
+                        // Normal signaling
+                        item.peer.signal(message.data);
+                        break;
+                    }
+                }
+                
+                if (!item) {
                     // Incoming call - check streamRef to see if we are ready to receive
                     if (!streamRef.current) {
                         console.log("Ignored call because no local stream (voice inactive)");
-                        return;
+                        break;
                     }
                     console.log("Accepting new call from:", message.senderId);
-                    // Use a placeholder name until validated or updated
-                    // Fix: Use senderName from message if available, else 'Unknown'
-                    const senderName = message.senderName || 'Unknown';
                     const peer = addPeer(message.senderId, message.data, streamRef.current);
                     peersRef.current.push({ peerId: message.senderId, peer, username: senderName });
-                    setConnectedPeers(prev => [...prev, { id: message.senderId, username: senderName }]);
+                    
+                    // Only update state if it's not already there
+                    setConnectedPeers(prev => {
+                        if (!prev.find(p => p.id === message.senderId)) {
+                            return [...prev, { id: message.senderId, username: senderName }];
+                        }
+                        return prev;
+                    });
                 }
                 break;
             case 'CHAT':
@@ -204,10 +228,7 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({ environmentId, 
 
         peer.on('stream', (remoteStream) => {
             console.log("Received remote stream from:", targetSessionId);
-            // Create audio element
-            const audio = document.createElement('audio');
-            audio.srcObject = remoteStream;
-            audio.play();
+            setAudioStreams(prev => [...prev.filter(s => s.id !== targetSessionId), { id: targetSessionId, stream: remoteStream }]);
         });
 
         peer.on('error', (err) => console.error('Peer error (initiator):', err));
@@ -245,9 +266,7 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({ environmentId, 
 
         peer.on('stream', (remoteStream) => {
             console.log("Received remote stream from (non-initiator):", senderSessionId);
-            const audio = document.createElement('audio');
-            audio.srcObject = remoteStream;
-            audio.play();
+            setAudioStreams(prev => [...prev.filter(s => s.id !== senderSessionId), { id: senderSessionId, stream: remoteStream }]);
         });
 
         peer.on('error', (err) => console.error('Peer error (receiver):', err));
@@ -267,6 +286,7 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({ environmentId, 
             item.peer.destroy();
             peersRef.current = peersRef.current.filter(p => p.peerId !== peerId);
             setConnectedPeers(prev => prev.filter(p => p.id !== peerId));
+            setAudioStreams(prev => prev.filter(s => s.id !== peerId));
         }
     };
 
@@ -322,6 +342,7 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({ environmentId, 
         peersRef.current.forEach(p => p.peer.destroy());
         peersRef.current = [];
         setConnectedPeers([]);
+        setAudioStreams([]);
     };
 
     const sendChatMessage = () => {
@@ -465,7 +486,25 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({ environmentId, 
                     </>
                 )}
             </div>
+            
+            {/* Hidden Audio Elements to prevent GC dropping the stream */}
+            <div className="hidden">
+                {audioStreams.map(s => (
+                    <AudioPlayer key={s.id} stream={s.stream} />
+                ))}
+            </div>
         </div>
     );
 };
+
+const AudioPlayer = ({ stream }: { stream: MediaStream }) => {
+    const audioRef = useRef<HTMLAudioElement>(null);
+    useEffect(() => {
+        if (audioRef.current && stream) {
+            audioRef.current.srcObject = stream;
+        }
+    }, [stream]);
+    return <audio ref={audioRef} autoPlay />;
+};
+
 export default CommunicationPanel;
