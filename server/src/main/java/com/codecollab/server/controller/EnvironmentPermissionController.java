@@ -60,6 +60,28 @@ public class EnvironmentPermissionController {
             auditService.logAction(requestor.getId(), "PERMISSION_CHANGED", environmentId.toString(),
                     "Granted " + request.getAccessLevel() + " to " + request.getUsernameOrEmail());
 
+            // Broadcast access level change over WebSockets
+            try {
+                com.codecollab.server.model.User targetUser = userRepository
+                        .findByUsernameIgnoreCase(request.getUsernameOrEmail().trim())
+                        .or(() -> userRepository.findByEmailIgnoreCase(request.getUsernameOrEmail().trim()))
+                        .orElse(null);
+                
+                if (targetUser != null && permission != null) {
+                    com.codecollab.server.handler.ChatWebSocketHandler chatWebSocketHandler = org.springframework.web.context.support.WebApplicationContextUtils
+                        .getRequiredWebApplicationContext(
+                            ((org.springframework.web.context.request.ServletRequestAttributes) org.springframework.web.context.request.RequestContextHolder.getRequestAttributes()).getRequest().getServletContext()
+                        ).getBean(com.codecollab.server.handler.ChatWebSocketHandler.class);
+                        
+                    chatWebSocketHandler.sendEvent(targetUser.getId(), "PERMISSION_UPDATED", java.util.Map.of(
+                            "environmentId", environmentId.toString(),
+                            "accessLevel", request.getAccessLevel().toString()
+                    ));
+                }
+            } catch (Exception wsEx) {
+                wsEx.printStackTrace();
+            }
+
             // Fire a real-time notification — look up user fresh from DB (not via detached
             // proxy)
             try {
@@ -103,6 +125,20 @@ public class EnvironmentPermissionController {
 
         auditService.logAction(requestor.getId(), "PERMISSION_REVOKED", environmentId.toString(),
                 "Revoked permission for user ID: " + userId);
+
+        try {
+            com.codecollab.server.handler.ChatWebSocketHandler chatWebSocketHandler = org.springframework.web.context.support.WebApplicationContextUtils
+                .getRequiredWebApplicationContext(
+                    ((org.springframework.web.context.request.ServletRequestAttributes) org.springframework.web.context.request.RequestContextHolder.getRequestAttributes()).getRequest().getServletContext()
+                ).getBean(com.codecollab.server.handler.ChatWebSocketHandler.class);
+                
+            chatWebSocketHandler.sendEvent(userId, "PERMISSION_UPDATED", java.util.Map.of(
+                    "environmentId", environmentId.toString(),
+                    "accessLevel", "REVOKED"
+            ));
+        } catch (Exception wsEx) {
+            wsEx.printStackTrace();
+        }
 
         return ResponseEntity.ok("Permission revoked.");
     }

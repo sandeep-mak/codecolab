@@ -64,6 +64,7 @@ public class EnvironmentController {
         env.getFiles().add(defaultFile);
 
         Environment savedEnv = environmentRepository.save(env);
+        permissionService.grantPermissionByUser(savedEnv.getId(), owner, EnvironmentPermission.AccessLevel.ADMIN);
 
         auditService.logAction(owner.getId(), "ENVIRONMENT_CREATED", savedEnv.getId().toString(),
                 "Created environment: " + request.getName());
@@ -96,7 +97,7 @@ public class EnvironmentController {
     public ResponseEntity<?> getMyEnvironments() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        List<Environment> envs = environmentRepository.findByOwnerId(userDetails.getId());
+        List<Environment> envs = environmentRepository.findByOwnerIdOrHasPermission(userDetails.getId());
         return ResponseEntity.ok(envs);
     }
 

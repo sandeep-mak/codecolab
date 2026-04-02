@@ -8,6 +8,7 @@ import * as Y from 'yjs';
 import { HocuspocusProvider } from '@hocuspocus/provider';
 import { MonacoBinding } from 'y-monaco';
 import { useAuth } from '../context/AuthContext';
+import { useWebSocket } from '../context/WebSocketContext';
 import CommunicationPanel from '../components/CommunicationPanel';
 import ShareModal from '../components/ShareModal';
 import Whiteboard from '../components/Whiteboard';
@@ -33,6 +34,7 @@ const EditorPage = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { user, token } = useAuth();
+    const { subscribe } = useWebSocket();
 
     // State
     const [environment, setEnvironment] = useState<Environment | null>(null);
@@ -100,6 +102,23 @@ const EditorPage = () => {
 
         fetchData();
     }, [id, token]);
+
+    // Listen to real-time permission updates
+    useEffect(() => {
+        const unsubscribe = subscribe((data: any) => {
+            if (data.type === 'PERMISSION_UPDATED' && data.environmentId === id) {
+                console.log('Permission updated via WS:', data.accessLevel);
+                if (data.accessLevel === 'REVOKED') {
+                    toast.error('Your access to this environment was revoked.');
+                    navigate('/dashboard');
+                } else {
+                    setPermission(data.accessLevel);
+                    toast.success(`Your access level is now ${data.accessLevel}`);
+                }
+            }
+        });
+        return () => unsubscribe();
+    }, [id, subscribe, navigate]);
 
     // 1. Setup Yjs Doc and Provider independently of the editor
     useEffect(() => {

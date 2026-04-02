@@ -216,10 +216,10 @@ const ShareModal = ({ environmentId, isOpen, onClose }: ShareModalProps) => {
                                         <div key={p.id} className="flex items-center justify-between bg-slate-800/50 p-2 rounded border border-slate-800">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold text-xs">
-                                                    {p.user.username.substring(0, 2).toUpperCase()}
+                                                    {(p.user?.username || p.user?.email || 'U').substring(0, 2).toUpperCase()}
                                                 </div>
                                                 <div>
-                                                    <p className="text-sm text-white font-medium">{p.user.username}</p>
+                                                    <p className="text-sm text-white font-medium">{p.user?.username || 'Unknown User'}</p>
                                                     <div className="flex items-center gap-2 mt-1">
                                                         <Shield size={12} className="text-slate-400" />
                                                         <select

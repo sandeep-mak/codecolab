@@ -108,7 +108,7 @@ public class SignalingWebSocketHandler extends TextWebSocketHandler {
                     "senderName", payload.get("senderName"), // Frontend sends name
                     "content", content,
                     "timestamp", java.time.LocalDateTime.now().toString());
-            broadcastToRoom(roomId, null, chatMsg); // null sender = broadcast to all
+            broadcastToRoom(roomId, session, chatMsg); // Exclude sender, frontend uses optimistic UI
         } else if ("SIGNAL".equals(type)) {
             // Forward WebRTC signal to specific target
             String targetSessionId = (String) payload.get("targetId");

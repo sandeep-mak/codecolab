@@ -71,11 +71,10 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({ environmentId, 
     const peersRef = useRef<PeerData[]>([]);
     const streamRef = useRef<MediaStream | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const handleSignalMessageRef = useRef<((message: any) => void) | null>(null);
 
     // Initialize WebSocket
     useEffect(() => {
-        if (!isOpen) return;
-
         const wsUrl = `${WS_BASE_URL}/ws/signal/${environmentId}?token=${token}`;
         const ws = new WebSocket(wsUrl);
 
@@ -86,7 +85,9 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({ environmentId, 
 
         ws.onmessage = (event) => {
             const message = JSON.parse(event.data);
-            handleSignalMessage(message);
+            if (handleSignalMessageRef.current) {
+                handleSignalMessageRef.current(message);
+            }
         };
 
         ws.onclose = () => {
@@ -109,7 +110,7 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({ environmentId, 
                 streamRef.current.getTracks().forEach(track => track.stop());
             }
         };
-    }, [isOpen, environmentId, token]);
+    }, [environmentId, token]);
 
     // Scroll to bottom of chat
     useEffect(() => {
@@ -197,11 +198,15 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({ environmentId, 
                 }
                 break;
             case 'LEAVE_VOICE':
-                console.log('User left voice:', message.senderId);
                 removePeer(message.senderId);
                 break;
         }
     };
+
+    // Update ref with the latest handleSignalMessage function on every render
+    useEffect(() => {
+        handleSignalMessageRef.current = handleSignalMessage;
+    });
 
     const createPeer = (targetSessionId: string, stream: MediaStream) => {
         const peer = new SimplePeer({
@@ -348,18 +353,29 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({ environmentId, 
     const sendChatMessage = () => {
         if (!inputText.trim() || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
 
+        const currentText = inputText.trim();
+        const msgId = Date.now().toString();
+
+        // Optimistic UI Append
+        setChatMessages(prev => [...prev, {
+            id: msgId,
+            senderId: user.id || user.username,
+            senderName: user.username,
+            content: currentText,
+            timestamp: new Date().toISOString()
+        }]);
+
         wsRef.current.send(JSON.stringify({
             type: 'CHAT',
-            content: inputText,
+            content: currentText,
             senderName: user.username
         }));
+        
         setInputText('');
     };
 
-    if (!isOpen) return null;
-
     return (
-        <div className="fixed right-4 bottom-4 top-20 w-80 bg-slate-900 border border-slate-700 rounded-xl overflow-hidden shadow-2xl z-50 flex flex-col transition-all">
+        <div className={`fixed right-4 bottom-4 top-20 w-80 bg-slate-900 border border-slate-700 rounded-xl overflow-hidden shadow-2xl z-50 flex flex-col transition-all duration-300 ${!isOpen ? 'translate-x-[150%] opacity-0 pointer-events-none' : 'translate-x-0 opacity-100'}`}>
             {/* Tabs & Header */}
             <div className="flex border-b border-slate-800 bg-slate-800/50">
                 <button
@@ -487,8 +503,8 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({ environmentId, 
                 )}
             </div>
             
-            {/* Hidden Audio Elements to prevent GC dropping the stream */}
-            <div className="hidden">
+            {/* Hidden Audio Elements to prevent GC dropping the stream while keeping them attached to the DOM without display: none */}
+            <div className="absolute w-0 h-0 opacity-0 overflow-hidden pointer-events-none">
                 {audioStreams.map(s => (
                     <AudioPlayer key={s.id} stream={s.stream} />
                 ))}

@@ -28,7 +28,23 @@ public class EnvironmentPermissionService {
 
     @Transactional(readOnly = true)
     public List<EnvironmentPermission> getPermissions(UUID environmentId) {
-        return permissionRepository.findByEnvironmentId(environmentId);
+        List<EnvironmentPermission> perms = new java.util.ArrayList<>(permissionRepository.findByEnvironmentId(environmentId));
+        Environment environment = environmentRepository.findById(environmentId).orElse(null);
+        if (environment != null && environment.getOwner() != null) {
+            boolean ownerFound = perms.stream().anyMatch(p -> p.getUser().getId().equals(environment.getOwner().getId()));
+            if (!ownerFound) {
+                User fullOwner = userRepository.findById(environment.getOwner().getId()).orElse(null);
+                if (fullOwner != null) {
+                    EnvironmentPermission ownerPerm = new EnvironmentPermission();
+                    ownerPerm.setId(UUID.randomUUID());
+                    ownerPerm.setEnvironment(environment);
+                    ownerPerm.setUser(fullOwner);
+                    ownerPerm.setAccessLevel(EnvironmentPermission.AccessLevel.ADMIN);
+                    perms.add(0, ownerPerm);
+                }
+            }
+        }
+        return perms;
     }
 
     @Transactional

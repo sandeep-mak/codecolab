@@ -41,6 +41,9 @@ const Dashboard = () => {
     const [joinCode, setJoinCode] = useState('');
     const [isJoining, setIsJoining] = useState(false);
 
+    // Friend list refresh trigger
+    const [refreshFriendListTrigger, setRefreshFriendListTrigger] = useState(0);
+
     const handleJoinByCode = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!joinCode.trim()) return;
@@ -126,16 +129,20 @@ const Dashboard = () => {
                     id: Date.now().toString(),
                     type: 'friend_request',
                     title: 'New Friend Request',
-                    message: `${data.data.senderName} sent you a friend request`
+                    message: `${data.data.senderName} sent you a friend request`,
+                    linkUrl: '#friends'
                 });
+                setRefreshFriendListTrigger(prev => prev + 1);
             } else if (data.type === 'FRIEND_REQUEST_ACCEPTED') {
                 console.log("Type is FRIEND_REQUEST_ACCEPTED");
                 addNotification({
                     id: Date.now().toString(),
                     type: 'friend_request', // Using generic icon or we can add 'success'
                     title: 'Friend Request Accepted',
-                    message: `${data.data.accepterName} is now your friend`
+                    message: `${data.data.accepterName} is now your friend`,
+                    linkUrl: '#friends'
                 });
+                setRefreshFriendListTrigger(prev => prev + 1);
             } else if (data.type === 'CHAT') {
                 console.log("Type is CHAT");
                 const senderId = data.senderId;
@@ -158,8 +165,11 @@ const Dashboard = () => {
                     id: Date.now().toString(),
                     type: 'friend_request',
                     title: 'New Notification',
-                    message: notifData?.message || 'You have a new notification'
+                    message: notifData?.message || 'You have a new notification',
+                    linkUrl: notifData?.linkUrl
                 });
+                // Refresh environments list automatically
+                fetchEnvironments();
             }
         });
 
@@ -177,6 +187,21 @@ const Dashboard = () => {
         setNotifications(prev => prev.filter(n => n.id !== id));
     };
 
+    const handleNotificationClick = (notification: AppNotification) => {
+        if (notification.linkUrl) {
+            if (notification.linkUrl.startsWith('http') || notification.linkUrl.startsWith('/')) {
+                navigate(notification.linkUrl);
+            } else if (notification.linkUrl.startsWith('#')) {
+                // If it's a hash, we might scroll or just let the user see the UI.
+                // For "friend_request", the social sidebar is already visible on the dashboard.
+                if (notification.linkUrl === '#friends') {
+                    // Flash or highlight friend list if possible, or just close notification
+                }
+            }
+        }
+        removeNotification(notification.id);
+    };
+
     const handleLogout = () => {
         console.log("Dashboard: Sending LOGOUT command");
         sendMessage({ type: 'LOGOUT' });
@@ -192,7 +217,7 @@ const Dashboard = () => {
             {/* Notifications Container */}
             <div className="fixed top-4 right-4 z-[100] space-y-3 pointer-events-none flex flex-col items-end">
                 {notifications.map(n => (
-                    <NotificationToast key={n.id} notification={n} onClose={removeNotification} />
+                    <NotificationToast key={n.id} notification={n} onClose={removeNotification} onClick={handleNotificationClick} />
                 ))}
             </div>
 
@@ -326,10 +351,13 @@ const Dashboard = () => {
                         <UserSearch />
                     </div>
                     <div className="flex-1 min-h-0">
-                        <FriendList onSelectFriend={(id, username) => {
-                            setActiveChatFriend({ id, username });
-                            setActiveChatGroup(null); // Close group chat if open
-                        }} />
+                        <FriendList 
+                            refreshTrigger={refreshFriendListTrigger}
+                            onSelectFriend={(id, username) => {
+                                setActiveChatFriend({ id, username });
+                                setActiveChatGroup(null); // Close group chat if open
+                            }} 
+                        />
                     </div>
                     <div className="flex-1 min-h-0">
                         <GroupList

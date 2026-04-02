@@ -25,9 +25,10 @@ interface User {
 
 interface FriendListProps {
     onSelectFriend: (friendId: string, username: string) => void;
+    refreshTrigger?: number;
 }
 
-export default function FriendList({ onSelectFriend }: FriendListProps) {
+export default function FriendList({ onSelectFriend, refreshTrigger }: FriendListProps) {
     const [friends, setFriends] = useState<User[]>([]);
     const [requests, setRequests] = useState<FriendRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -90,7 +91,7 @@ export default function FriendList({ onSelectFriend }: FriendListProps) {
             fetchFriends();
         }, 30000);
         return () => clearInterval(interval);
-    }, []);
+    }, [refreshTrigger]);
 
     // WebSocket for real-time status updates
     const { subscribe } = useWebSocket();

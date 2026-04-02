@@ -9,14 +9,16 @@ export interface AppNotification {
     title: string;
     message: string;
     duration?: number;
+    linkUrl?: string;
 }
 
 interface NotificationToastProps {
     notification: AppNotification;
     onClose: (id: string) => void;
+    onClick?: (notification: AppNotification) => void;
 }
 
-export default function NotificationToast({ notification, onClose }: NotificationToastProps) {
+export default function NotificationToast({ notification, onClose, onClick }: NotificationToastProps) {
     useEffect(() => {
         if (notification.duration !== 0) {
             const timer = setTimeout(() => {
@@ -36,7 +38,12 @@ export default function NotificationToast({ notification, onClose }: Notificatio
     };
 
     return (
-        <div className="flex items-start gap-3 bg-slate-900 border border-slate-700 text-slate-200 p-4 rounded-lg shadow-xl animate-slide-in min-w-[300px] max-w-sm pointer-events-auto">
+        <div 
+            onClick={() => {
+                if (onClick) onClick(notification);
+            }}
+            className={`flex items-start gap-3 bg-slate-900 border border-slate-700 text-slate-200 p-4 rounded-lg shadow-xl animate-slide-in min-w-[300px] max-w-sm pointer-events-auto ${onClick ? 'cursor-pointer hover:bg-slate-800 transition-colors' : ''}`}
+        >
             <div className="mt-1 flex-shrink-0">
                 {getIcon()}
             </div>

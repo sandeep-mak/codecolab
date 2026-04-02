@@ -108,6 +108,7 @@ const NotificationBell = () => {
     };
 
     const formatTime = (dateStr: string) => {
+        // Parse the date as is (which will be treated as local time without a timezone)
         const date = new Date(dateStr);
         const now = new Date();
         const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
@@ -137,7 +138,7 @@ const NotificationBell = () => {
             </button>
 
             {open && (
-                <div className="absolute right-0 mt-2 w-80 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl z-50 overflow-hidden">
+                <div className="fixed inset-x-4 top-16 sm:absolute sm:inset-x-auto sm:right-0 sm:mt-2 w-auto sm:w-80 max-w-sm bg-slate-800 border border-slate-700 rounded-xl shadow-2xl z-[100] overflow-hidden">
                     {/* Header */}
                     <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700">
                         <span className="font-semibold text-white text-sm">Notifications</span>
