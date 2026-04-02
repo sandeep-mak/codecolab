@@ -107,9 +107,11 @@ const NotificationBell = () => {
         }
     };
 
-    const formatTime = (dateStr: string) => {
-        // Parse the date as is (which will be treated as local time without a timezone)
-        const date = new Date(dateStr);
+    const formatTime = (dateString: string) => {
+        // Explicitly format standard DB strings into local UTC references by adding trailing Z.
+        // Javascript's Date function otherwise assumes the unmapped string belongs to the browser's local timezone.
+        const normalizedString = dateString.endsWith('Z') ? dateString : `${dateString}Z`;
+        const date = new Date(normalizedString);
         const now = new Date();
         const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
         if (diff < 60) return 'just now';

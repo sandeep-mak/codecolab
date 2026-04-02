@@ -61,7 +61,7 @@ const EditorPage = () => {
     // Computed
     const isReadOnly = permission === 'VIEWER';
     const isAdmin = permission === 'ADMIN';
-    const canRun = permission === 'ADMIN' || permission === 'EDITOR';
+    const canRun = permission === 'ADMIN';
 
     // Fetch Environment & Permissions
     useEffect(() => {
@@ -106,14 +106,14 @@ const EditorPage = () => {
     // Listen to real-time permission updates
     useEffect(() => {
         const unsubscribe = subscribe((data: any) => {
-            if (data.type === 'PERMISSION_UPDATED' && data.environmentId === id) {
-                console.log('Permission updated via WS:', data.accessLevel);
-                if (data.accessLevel === 'REVOKED') {
+            if (data.type === 'PERMISSION_UPDATED' && data.data.environmentId === id) {
+                console.log('Permission updated via WS:', data.data.accessLevel);
+                if (data.data.accessLevel === 'REVOKED') {
                     toast.error('Your access to this environment was revoked.');
                     navigate('/dashboard');
                 } else {
-                    setPermission(data.accessLevel);
-                    toast.success(`Your access level is now ${data.accessLevel}`);
+                    setPermission(data.data.accessLevel);
+                    toast.success(`Your access level is now ${data.data.accessLevel}`);
                 }
             }
         });

@@ -156,7 +156,15 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                             chatMessageRepository.save(chatMessage);
                             System.out.println("WS: Message saved. ID: " + chatMessage.getId());
                         } catch (Exception e) {
-                            sendErrorMessage(session, "Failed to save message: " + e.getMessage());
+                            try {
+                                synchronized (session) {
+                                    session.sendMessage(new TextMessage(objectMapper.writeValueAsString(Map.of(
+                                            "type", "ERROR",
+                                            "message", "Failed to save message: " + e.getMessage()))));
+                                }
+                            } catch (Exception wsError) {
+                                // ignore
+                            }
                             e.printStackTrace();
                             return;
                         }
@@ -323,7 +331,9 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             for (WebSocketSession s : sessions) {
                 if (s.isOpen()) {
                     try {
-                        s.sendMessage(new TextMessage(message));
+                        synchronized (s) {
+                            s.sendMessage(new TextMessage(message));
+                        }
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -337,7 +347,9 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             Map<String, Object> payload = Map.of(
                     "type", "ERROR",
                     "message", message);
-            session.sendMessage(new TextMessage(objectMapper.writeValueAsString(payload)));
+            synchronized (session) {
+                session.sendMessage(new TextMessage(objectMapper.writeValueAsString(payload)));
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

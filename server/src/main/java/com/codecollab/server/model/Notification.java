@@ -39,7 +39,7 @@ public class Notification {
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        createdAt = LocalDateTime.now(java.time.ZoneOffset.UTC);
     }
 
     public Notification(UUID userId, String message, String linkUrl) {

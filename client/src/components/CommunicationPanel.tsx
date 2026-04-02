@@ -223,12 +223,14 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({ environmentId, 
 
         peer.on('signal', (data) => {
             console.log("Generated SIGNAL for target:", targetSessionId);
-            wsRef.current?.send(JSON.stringify({
-                type: 'SIGNAL',
-                targetId: targetSessionId,
-                senderName: user.username, // Send our name so target knows who called
-                data: data
-            }));
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify({
+                    type: 'SIGNAL',
+                    targetId: targetSessionId,
+                    senderName: user.username, // Send our name so target knows who called
+                    data: data
+                }));
+            }
         });
 
         peer.on('stream', (remoteStream) => {
@@ -261,12 +263,14 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({ environmentId, 
 
         peer.on('signal', (data) => {
             console.log("Generated ANSWER SIGNAL for target:", senderSessionId);
-            wsRef.current?.send(JSON.stringify({
-                type: 'SIGNAL',
-                targetId: senderSessionId,
-                senderName: user.username, // Send our name so target knows who answered
-                data: data
-            }));
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify({
+                    type: 'SIGNAL',
+                    targetId: senderSessionId,
+                    senderName: user.username, // Send our name so target knows who answered
+                    data: data
+                }));
+            }
         });
 
         peer.on('stream', (remoteStream) => {

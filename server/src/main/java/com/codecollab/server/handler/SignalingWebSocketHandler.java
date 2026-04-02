@@ -156,7 +156,9 @@ public class SignalingWebSocketHandler extends TextWebSocketHandler {
                 if (s.isOpen()) {
                     if (excludeSession == null || !s.getId().equals(excludeSession.getId())) {
                         try {
-                            s.sendMessage(new TextMessage(json));
+                            synchronized (s) {
+                                s.sendMessage(new TextMessage(json));
+                            }
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -168,7 +170,9 @@ public class SignalingWebSocketHandler extends TextWebSocketHandler {
 
     private void sendMessage(WebSocketSession session, Map<String, Object> message) {
         try {
-            session.sendMessage(new TextMessage(objectMapper.writeValueAsString(message)));
+            synchronized (session) {
+                session.sendMessage(new TextMessage(objectMapper.writeValueAsString(message)));
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

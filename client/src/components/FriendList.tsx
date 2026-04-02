@@ -120,7 +120,7 @@ export default function FriendList({ onSelectFriend, refreshTrigger }: FriendLis
             {requests.length > 0 && (
                 <div className="bg-amber-900/20 border border-amber-800/50 p-4 rounded-lg shadow">
                     <h3 className="text-lg font-semibold mb-3 text-amber-200">Friend Requests</h3>
-                    <div className="space-y-2">
+                    <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar pr-2">
                         {requests.map((req) => (
                             <div key={req.id} className="flex justify-between items-center bg-slate-900 p-3 rounded border border-slate-700">
                                 <span className="text-slate-200">{req.sender.username}</span>
@@ -151,7 +151,7 @@ export default function FriendList({ onSelectFriend, refreshTrigger }: FriendLis
                 ) : friends.length === 0 ? (
                     <p className="text-slate-500 italic">No friends yet.</p>
                 ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar pr-2">
                         {friends.map((friend) => (
                             <div
                                 key={friend.id}

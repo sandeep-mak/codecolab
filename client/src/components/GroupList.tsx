@@ -53,7 +53,7 @@ export default function GroupList({ onSelectGroup, onCreateGroup, refreshTrigger
                 </button>
             </div>
 
-            <div className="space-y-2 overflow-y-auto pr-1 flex-1">
+            <div className="space-y-2 overflow-y-auto custom-scrollbar pr-1 flex-1">
                 {groups.length === 0 ? (
                     <p className="text-slate-500 text-sm text-center py-4">No groups yet.</p>
                 ) : (

@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import com.codecollab.server.repository.NotificationRepository;
+import com.codecollab.server.model.Notification;
 
 import java.util.List;
 import java.util.Map;
@@ -26,6 +28,9 @@ public class FriendController {
 
     @Autowired
     private FriendRequestRepository friendRequestRepository;
+
+    @Autowired
+    private NotificationRepository notificationRepository;
 
     @Autowired
     private ChatWebSocketHandler chatWebSocketHandler;
@@ -57,11 +62,15 @@ public class FriendController {
         FriendRequest request = new FriendRequest(sender, receiver, FriendRequestStatus.PENDING);
         friendRequestRepository.save(request);
 
-        // Notify receiver
+        // Notify receiver via WebSocket
         chatWebSocketHandler.sendEvent(receiver.getId(), "FRIEND_REQUEST", Map.of(
                 "requestId", request.getId(),
                 "senderId", sender.getId(),
                 "senderName", sender.getUsername()));
+
+        // Save persistent notification in DB
+        Notification notification = new Notification(receiver.getId(), sender.getUsername() + " sent you a friend request", "#friends");
+        notificationRepository.save(notification);
 
         return ResponseEntity.ok("Friend request sent");
     }
