@@ -152,6 +152,48 @@ public class EnvironmentPermissionController {
         return ResponseEntity.ok(level);
     }
 
+    @PostMapping("/delegate-examinee")
+    public ResponseEntity<?> delegateExaminee(@PathVariable UUID environmentId, @RequestBody java.util.Map<String, String> payload,
+                                              @AuthenticationPrincipal UserDetails userDetails) {
+        User requestor = userRepository.findById(((com.codecollab.server.security.UserDetailsImpl) userDetails).getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        if (!permissionService.hasPermission(environmentId, requestor.getId(),
+                EnvironmentPermission.AccessLevel.ADMIN)) {
+            return ResponseEntity.status(403).body("Only Admins can delegate examinee.");
+        }
+
+        String userIdStr = payload.get("userId");
+        if (userIdStr == null) {
+            return ResponseEntity.badRequest().body("userId is required.");
+        }
+
+        UUID examineeId = UUID.fromString(userIdStr);
+        permissionService.delegateExaminee(environmentId, examineeId);
+
+        auditService.logAction(requestor.getId(), "EXAMINEE_DELEGATED", environmentId.toString(),
+                "Delegated EXAMINEE role exclusively to user ID: " + examineeId);
+
+        // Broadcast to all users in the environment to refetch permissions
+        try {
+            com.codecollab.server.handler.ChatWebSocketHandler chatWebSocketHandler = org.springframework.web.context.support.WebApplicationContextUtils
+                    .getRequiredWebApplicationContext(
+                            ((org.springframework.web.context.request.ServletRequestAttributes) org.springframework.web.context.request.RequestContextHolder.getRequestAttributes()).getRequest().getServletContext()
+                    ).getBean(com.codecollab.server.handler.ChatWebSocketHandler.class);
+
+            List<EnvironmentPermission> members = permissionService.getPermissions(environmentId);
+            for (EnvironmentPermission perm : members) {
+                chatWebSocketHandler.sendEvent(perm.getUser().getId(), "PERMISSION_UPDATED", java.util.Map.of(
+                        "environmentId", environmentId.toString(),
+                        "accessLevel", perm.getAccessLevel().toString()
+                ));
+            }
+        } catch (Exception wsEx) {
+            wsEx.printStackTrace();
+        }
+
+        return ResponseEntity.ok("Examinee delegated successfully.");
+    }
+
     @Data
     public static class GrantRequest {
         @NotBlank(message = "Username or Email cannot be empty")

@@ -41,6 +41,13 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     @Autowired
     private com.codecollab.server.repository.FriendRequestRepository friendRequestRepository;
 
+    @Autowired
+    @org.springframework.context.annotation.Lazy
+    private com.codecollab.server.service.NotificationService notificationService;
+
+    @Autowired
+    private com.codecollab.server.service.EnvironmentPermissionService permissionService;
+
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         // Use the userId extracted by JwtHandshakeInterceptor
@@ -104,6 +111,11 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         String type = (String) payload.get("type");
         if ("LOGOUT".equals(type)) {
             handleLogoutMessage(session);
+            return;
+        }
+
+        if ("EXAM_VIOLATION".equals(type)) {
+            handleExamViolation(session, payload);
             return;
         }
 
@@ -264,6 +276,39 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             broadcastUserStatus(userId, false);
         } else {
             System.out.println("WS: LOGOUT command from unknown session.");
+        }
+    }
+
+    private void handleExamViolation(WebSocketSession session, Map<String, Object> payload) {
+        String envIdStr = payload.get("environmentId") != null ? payload.get("environmentId").toString() : null;
+        String violationType = payload.get("violationType") != null ? payload.get("violationType").toString() : "switched tabs";
+
+        UUID senderId = null;
+        for (Map.Entry<UUID, Set<WebSocketSession>> entry : userSessions.entrySet()) {
+            if (entry.getValue().contains(session)) {
+                senderId = entry.getKey();
+                break;
+            }
+        }
+
+        if (senderId == null || envIdStr == null) return;
+
+        User sender = userRepository.findById(senderId).orElse(null);
+        if (sender == null) return;
+
+        try {
+            UUID envId = UUID.fromString(envIdStr);
+            java.util.List<com.codecollab.server.model.EnvironmentPermission> perms = permissionService.getPermissions(envId);
+
+            String message = sender.getUsername() + " " + violationType + " during the exam!";
+
+            for (com.codecollab.server.model.EnvironmentPermission p : perms) {
+                if (p.getAccessLevel() == com.codecollab.server.model.EnvironmentPermission.AccessLevel.ADMIN) {
+                    notificationService.createAndSend(p.getUser().getId(), message, "/editor/" + envId.toString());
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

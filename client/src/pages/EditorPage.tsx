@@ -34,7 +34,7 @@ const EditorPage = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { user, token } = useAuth();
-    const { subscribe } = useWebSocket();
+    const { subscribe, sendMessage } = useWebSocket();
 
     // State
     const [environment, setEnvironment] = useState<Environment | null>(null);
@@ -45,6 +45,10 @@ const EditorPage = () => {
     const [isSaving, setIsSaving] = useState(false);
     const [permission, setPermission] = useState<string | null>(null);
     const [editorInstance, setEditorInstance] = useState<any>(null);
+
+    const [isExamMode, setIsExamMode] = useState(false);
+    const [problemStatement, setProblemStatement] = useState('');
+    const internalClipboard = useRef('');
 
     // UI State
     const [isCommunicationOpen, setIsCommunicationOpen] = useState(false);
@@ -85,6 +89,8 @@ const EditorPage = () => {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setEnvironment(envRes.data);
+                setIsExamMode(envRes.data.isExamMode || false);
+                setProblemStatement(envRes.data.problemStatement || '');
                 if (envRes.data.files && envRes.data.files.length > 0) {
                     setFiles(envRes.data.files);
                     setActiveFile(envRes.data.files[0]);
@@ -103,7 +109,7 @@ const EditorPage = () => {
         fetchData();
     }, [id, token]);
 
-    // Listen to real-time permission updates
+    // Listen to real-time updates
     useEffect(() => {
         const unsubscribe = subscribe((data: any) => {
             if (data.type === 'PERMISSION_UPDATED' && data.data.environmentId === id) {
@@ -116,9 +122,45 @@ const EditorPage = () => {
                     toast.success(`Your access level is now ${data.data.accessLevel}`);
                 }
             }
+            if (data.type === 'EXAM_MODE_TOGGLED' && data.data.environmentId === id) {
+                setIsExamMode(data.data.isExamMode);
+                toast(data.data.isExamMode ? 'Exam Mode Enabled' : 'Exam Mode Disabled');
+            }
+            if (data.type === 'PROBLEM_STATEMENT_UPDATED' && data.data.environmentId === id) {
+                setProblemStatement(data.data.problemStatement);
+            }
         });
         return () => unsubscribe();
     }, [id, subscribe, navigate]);
+
+    // Anti-Cheat: Visibility change tracking
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.hidden && isExamMode && permission === 'EDITOR') {
+                toast.error('Warning: Tab switching is recorded.', { duration: 5000 });
+                sendMessage({
+                    type: 'EXAM_VIOLATION',
+                    environmentId: id,
+                    violationType: 'switched tabs'
+                });
+            }
+        };
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+    }, [isExamMode, permission, id, sendMessage]);
+
+    const handleUpdateProblem = async (newProblem: string) => {
+        setProblemStatement(newProblem);
+        if (isAdmin && id) {
+            try {
+                await axios.put(`${API_BASE_URL}/api/environments/${id}/problem`, {
+                    problemStatement: newProblem
+                }, { headers: { Authorization: `Bearer ${token}` } });
+            } catch (err) {
+                console.error("Failed to update problem", err);
+            }
+        }
+    };
 
     // 1. Setup Yjs Doc and Provider independently of the editor
     useEffect(() => {
@@ -276,6 +318,39 @@ const EditorPage = () => {
     const handleEditorDidMount: OnMount = (editor, _monaco) => {
         editorRef.current = editor;
         setEditorInstance(editor);
+
+        // Anti-Cheat: Paste restrictions
+        editor.onKeyDown((e: any) => {
+            // Log copy to internal clipboard (Cmd/Ctrl + C)
+            if ((e.metaKey || e.ctrlKey) && e.keyCode === 33 /* KeyCode.KeyC */) {
+                const selection = editor.getSelection();
+                if (selection) {
+                    internalClipboard.current = editor.getModel()?.getValueInRange(selection) || '';
+                }
+            }
+        });
+
+        editor.onDidPaste((_e: any) => {
+            if (isExamMode && permission === 'EDITOR') {
+                navigator.clipboard.readText().then(text => {
+                    // Normalize text spaces to allow minor whitespace differences
+                    if (text.trim() !== internalClipboard.current.trim()) {
+                        // Undo the paste action
+                        editor.trigger('keyboard', 'undo', null);
+                        toast.error("Pasting from external sources is disabled in Exam Mode.", { duration: 5000 });
+                        sendMessage({
+                            type: 'EXAM_VIOLATION',
+                            environmentId: id,
+                            violationType: 'pasted external code'
+                        });
+                    }
+                }).catch(_err => {
+                    // Browser might block clipboard API
+                    editor.trigger('keyboard', 'undo', null);
+                    toast.error("Pasting is strictly disabled securely.");
+                });
+            }
+        });
     };
 
     // Run Code
@@ -494,37 +569,66 @@ const EditorPage = () => {
                     </div>
                 </div>
 
-                {/* Editor Area */}
-                <div className="flex-1 relative bg-slate-950 flex">
-                    {viewMode === 'code' ? (
-                        <Editor
-                            height="100%"
-                            defaultLanguage="python"
-                            theme="vs-dark"
-                            defaultValue="// Loading..."
-                            value={activeFile?.content} // Only for initial load, Yjs takes over
-                            onMount={handleEditorDidMount}
-                            options={{
-                                minimap: { enabled: false },
-                                fontSize: 14,
-                                padding: { top: 16 },
-                                readOnly: isReadOnly,
-                                automaticLayout: true,
-                            }}
-                        />
-                    ) : (
-                        <Whiteboard doc={docRef.current} isReadOnly={isReadOnly} />
+                {/* Body Area: Split horizontally if Exam Mode */}
+                <div className="flex-1 flex overflow-hidden">
+                    {/* Problem Statement Panel */}
+                    {isExamMode && (
+                        <div className="w-1/3 min-w-[250px] border-r border-slate-800 flex flex-col bg-slate-900 border-t border-slate-800 z-10 box-border">
+                             <div className="h-8 bg-slate-800 text-xs text-slate-400 flex items-center px-4 font-bold tracking-wider">
+                                 PROBLEM STATEMENT
+                             </div>
+                             <div className="flex-1 p-4 overflow-auto">
+                                 {isAdmin ? (
+                                    <textarea
+                                        className="w-full h-full bg-slate-950 text-slate-200 p-3 rounded border border-slate-700 resize-none font-mono text-sm focus:outline-none focus:border-indigo-500"
+                                        value={problemStatement}
+                                        onChange={(e) => handleUpdateProblem(e.target.value)}
+                                        placeholder="Type problem statement here..."
+                                    />
+                                 ) : (
+                                    <div className="text-slate-200 whitespace-pre-wrap font-sans leading-relaxed text-sm">
+                                        {problemStatement || "Wait for the admin to provide the problem statement."}
+                                    </div>
+                                 )}
+                             </div>
+                        </div>
                     )}
-                </div>
 
-                {/* Terminal / Output */}
-                <div className="h-48 bg-slate-950 border-t border-slate-800 flex flex-col">
-                    <div className="bg-slate-900 px-4 py-1.5 text-xs text-slate-400 flex items-center gap-2 select-none border-b border-slate-800">
-                        <Terminal size={12} />
-                        TERMINAL
-                    </div>
-                    <div className="flex-1 p-4 font-mono text-sm overflow-auto text-emerald-400 whitespace-pre-wrap bg-slate-950">
-                        {output || "Ready to execute..."}
+                    {/* Original Editor + Terminal Container */}
+                    <div className="flex-1 relative flex flex-col min-w-0">
+                        {/* Editor Area */}
+                        <div className="flex-1 relative bg-slate-950 flex border-t border-slate-800">
+                            {viewMode === 'code' ? (
+                                <Editor
+                                    height="100%"
+                                    defaultLanguage="python"
+                                    theme="vs-dark"
+                                    defaultValue="// Loading..."
+                                    value={activeFile?.content} // Only for initial load, Yjs takes over
+                                    onMount={handleEditorDidMount}
+                                    options={{
+                                        minimap: { enabled: false },
+                                        fontSize: 14,
+                                        padding: { top: 16 },
+                                        readOnly: isReadOnly,
+                                        automaticLayout: true,
+                                    }}
+                                />
+                            ) : (
+                                <Whiteboard doc={docRef.current} isReadOnly={isReadOnly} />
+                            )}
+                        </div>
+        
+                        {/* Terminal / Output */}
+                        <div className="h-48 bg-slate-950 border-t border-slate-800 flex flex-col">
+                            <div className="bg-slate-900 px-4 py-1.5 text-xs text-slate-400 flex items-center gap-2 select-none border-b border-slate-800">
+                                <Terminal size={12} />
+                                TERMINAL
+                            </div>
+                            <div className="flex-1 p-4 font-mono text-sm overflow-auto text-emerald-400 whitespace-pre-wrap bg-slate-950">
+                                {output || "Ready to execute..."}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

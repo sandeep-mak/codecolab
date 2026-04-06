@@ -14,6 +14,7 @@ import com.codecollab.server.service.EnvironmentPermissionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
@@ -203,6 +204,64 @@ public class EnvironmentController {
                 user.getUsername() + " created file '" + newFile.getName() + "'");
 
         return ResponseEntity.ok(savedFile);
+    }
+
+    @PutMapping("/{id}/exam-mode")
+    public ResponseEntity<?> setExamMode(@PathVariable UUID id, @RequestBody java.util.Map<String, Boolean> payload, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        User requestor = userRepository.findById(userDetails.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        if (!permissionService.hasPermission(id, requestor.getId(), EnvironmentPermission.AccessLevel.ADMIN)) {
+            return ResponseEntity.status(403).body(Map.of("error", "Only Admins can toggle exam mode"));
+        }
+
+        Environment env = environmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Environment not found"));
+        
+        Boolean isExamMode = payload.get("isExamMode");
+        if (isExamMode != null) {
+            env.setIsExamMode(isExamMode);
+            environmentRepository.save(env);
+
+            // Broadcast
+            List<EnvironmentPermission> members = permissionService.getPermissions(id);
+            for (EnvironmentPermission perm : members) {
+                chatWebSocketHandler.sendEvent(perm.getUser().getId(), "EXAM_MODE_TOGGLED", Map.of(
+                        "environmentId", id.toString(),
+                        "isExamMode", isExamMode
+                ));
+            }
+        }
+        return ResponseEntity.ok(Map.of("message", "Exam mode updated", "isExamMode", isExamMode));
+    }
+
+    @PutMapping("/{id}/problem")
+    public ResponseEntity<?> setProblemStatement(@PathVariable UUID id, @RequestBody java.util.Map<String, String> payload, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        User requestor = userRepository.findById(userDetails.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        if (!permissionService.hasPermission(id, requestor.getId(), EnvironmentPermission.AccessLevel.ADMIN)) {
+            return ResponseEntity.status(403).body(Map.of("error", "Only Admins can update the problem statement"));
+        }
+
+        Environment env = environmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Environment not found"));
+        
+        String problemStatement = payload.get("problemStatement");
+        if (problemStatement != null) {
+            env.setProblemStatement(problemStatement);
+            environmentRepository.save(env);
+
+            // Broadcast
+            List<EnvironmentPermission> members = permissionService.getPermissions(id);
+            for (EnvironmentPermission perm : members) {
+                chatWebSocketHandler.sendEvent(perm.getUser().getId(), "PROBLEM_STATEMENT_UPDATED", Map.of(
+                        "environmentId", id.toString(),
+                        "problemStatement", problemStatement
+                ));
+            }
+        }
+        return ResponseEntity.ok(Map.of("message", "Problem statement updated"));
     }
 }
 

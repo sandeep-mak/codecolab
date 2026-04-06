@@ -33,6 +33,8 @@ const ShareModal = ({ environmentId, isOpen, onClose }: ShareModalProps) => {
     const [joinCode, setJoinCode] = useState<string | null>(null);
     const [codeCopied, setCodeCopied] = useState(false);
 
+    const [isExamMode, setIsExamMode] = useState(false);
+
     useEffect(() => {
         if (isOpen) {
             fetchPermissions();
@@ -46,8 +48,22 @@ const ShareModal = ({ environmentId, isOpen, onClose }: ShareModalProps) => {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setJoinCode(res.data.joinCode || null);
+            setIsExamMode(res.data.isExamMode || false);
         } catch (err) {
             console.error('Failed to fetch environment', err);
+        }
+    };
+
+    const toggleExamMode = async () => {
+        try {
+            const newStatus = !isExamMode;
+            await axios.put(`${API_BASE_URL}/api/environments/${environmentId}/exam-mode`, {
+                isExamMode: newStatus
+            }, { headers: { Authorization: `Bearer ${token}` } });
+            setIsExamMode(newStatus);
+        } catch (err) {
+            console.error('Failed to toggle Exam Mode', err);
+            alert("Failed to toggle Exam Mode");
         }
     };
 
@@ -120,6 +136,21 @@ const ShareModal = ({ environmentId, isOpen, onClose }: ShareModalProps) => {
         }
     };
 
+    const handleDelegateExaminee = async (userId: string) => {
+        if (!confirm("This will revoke write access from everyone else and assign this user as the sole Examinee (EDITOR). Proceed?")) return;
+        try {
+            await axios.post(`${API_BASE_URL}/api/environments/${environmentId}/permissions/delegate-examinee`, {
+                userId: userId
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            fetchPermissions();
+        } catch (err) {
+            console.error("Failed to delegate examinee", err);
+            alert("Failed to delegate examinee");
+        }
+    };
+
     if (!isOpen) return null;
 
     return (
@@ -153,6 +184,18 @@ const ShareModal = ({ environmentId, isOpen, onClose }: ShareModalProps) => {
 
                 {activeTab === 'permissions' ? (
                     <>
+                        {/* Exam Mode Toggle */}
+                        <div className="mb-5 p-4 bg-slate-800/80 border border-slate-700/60 rounded-lg flex items-center justify-between">
+                            <div>
+                                <h3 className="text-sm font-bold text-slate-200">Exam Mode (Proctoring)</h3>
+                                <p className="text-xs text-slate-400 mt-1">Split UI, restrict pasting, and monitor tab switching.</p>
+                            </div>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" className="sr-only peer" checked={isExamMode} onChange={toggleExamMode} />
+                                <div className="w-11 h-6 bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                            </label>
+                        </div>
+
                         {/* Join Code Section */}
                         {joinCode && (
                             <div className="mb-5 p-4 bg-indigo-950/40 border border-indigo-800/60 rounded-lg">
@@ -231,6 +274,15 @@ const ShareModal = ({ environmentId, isOpen, onClose }: ShareModalProps) => {
                                                             <option value="EDITOR">Editor</option>
                                                             <option value="ADMIN">Admin</option>
                                                         </select>
+                                                        {isExamMode && p.accessLevel !== 'ADMIN' && (
+                                                            <button
+                                                                onClick={() => handleDelegateExaminee(p.user.id)}
+                                                                className="text-xs bg-indigo-600/30 hover:bg-indigo-500 text-indigo-200 hover:text-white px-2 py-0.5 rounded transition-colors border border-indigo-500/50"
+                                                                title="Assign as sole Examinee (EDITOR mode) and set others to VIEWER"
+                                                            >
+                                                                Assign Examinee
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>

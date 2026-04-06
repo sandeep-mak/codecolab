@@ -26,6 +26,12 @@ public class Environment {
     @Column(columnDefinition = "TEXT")
     private String whiteboardData;
 
+    @Column(name = "is_exam_mode")
+    private Boolean isExamMode = false;
+
+    @Column(name = "problem_statement", columnDefinition = "TEXT")
+    private String problemStatement;
+
     // 6-character alphanumeric join code, auto-generated
     @Column(unique = true, length = 6)
     private String joinCode;

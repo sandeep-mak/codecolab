@@ -137,4 +137,21 @@ public class EnvironmentPermissionService {
 
         return false;
     }
+
+    @Transactional
+    public void delegateExaminee(UUID environmentId, UUID examineeId) {
+        List<EnvironmentPermission> perms = permissionRepository.findByEnvironmentId(environmentId);
+        
+        for (EnvironmentPermission perm : perms) {
+            if (perm.getAccessLevel() == EnvironmentPermission.AccessLevel.ADMIN) {
+                continue; // Admins keep their rights
+            }
+            if (perm.getUser().getId().equals(examineeId)) {
+                perm.setAccessLevel(EnvironmentPermission.AccessLevel.EDITOR);
+            } else {
+                perm.setAccessLevel(EnvironmentPermission.AccessLevel.VIEWER);
+            }
+            permissionRepository.save(perm);
+        }
+    }
 }
