@@ -154,4 +154,15 @@ public class EnvironmentPermissionService {
             permissionRepository.save(perm);
         }
     }
+
+    @Transactional
+    public void lockAllToViewer(UUID environmentId) {
+        List<EnvironmentPermission> perms = permissionRepository.findByEnvironmentId(environmentId);
+        for (EnvironmentPermission perm : perms) {
+            if (perm.getAccessLevel() != EnvironmentPermission.AccessLevel.ADMIN) {
+                perm.setAccessLevel(EnvironmentPermission.AccessLevel.VIEWER);
+                permissionRepository.save(perm);
+            }
+        }
+    }
 }

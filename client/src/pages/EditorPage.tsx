@@ -49,6 +49,7 @@ const EditorPage = () => {
     const [isExamMode, setIsExamMode] = useState(false);
     const [problemStatement, setProblemStatement] = useState('');
     const internalClipboard = useRef('');
+    const problemSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // UI State
     const [isCommunicationOpen, setIsCommunicationOpen] = useState(false);
@@ -119,15 +120,32 @@ const EditorPage = () => {
                     navigate('/dashboard');
                 } else {
                     setPermission(data.data.accessLevel);
-                    toast.success(`Your access level is now ${data.data.accessLevel}`);
+                    // Only toast if it's not a silent exam-mode lockdown (avoid spam)
+                    if (!data.data.examSilent) {
+                        toast(`Access updated: ${data.data.accessLevel}`, { icon: '🔐' });
+                    }
                 }
             }
             if (data.type === 'EXAM_MODE_TOGGLED' && data.data.environmentId === id) {
                 setIsExamMode(data.data.isExamMode);
-                toast(data.data.isExamMode ? 'Exam Mode Enabled' : 'Exam Mode Disabled');
+                // Also update problem statement if provided
+                if (data.data.problemStatement !== undefined) {
+                    setProblemStatement(data.data.problemStatement);
+                }
+                if (data.data.isExamMode) {
+                    toast('🎓 Exam Mode Activated — write access restricted', { duration: 4000 });
+                } else {
+                    toast('Exam Mode Deactivated', { icon: '✅' });
+                }
             }
             if (data.type === 'PROBLEM_STATEMENT_UPDATED' && data.data.environmentId === id) {
                 setProblemStatement(data.data.problemStatement);
+            }
+            if (data.type === 'EXAMINEE_ASSIGNED' && data.data.environmentId === id) {
+                toast('📝 You are the Examinee! Read the problem statement and start coding.', {
+                    duration: 6000,
+                    style: { background: '#4f46e5', color: '#fff', fontWeight: 'bold' }
+                });
             }
         });
         return () => unsubscribe();
@@ -149,16 +167,22 @@ const EditorPage = () => {
         return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
     }, [isExamMode, permission, id, sendMessage]);
 
-    const handleUpdateProblem = async (newProblem: string) => {
+    const handleUpdateProblem = (newProblem: string) => {
+        // Update local state immediately for a smooth typing experience
         setProblemStatement(newProblem);
+        // Debounce the API save — only call the API 800ms after the user stops typing
+        if (problemSaveTimerRef.current) clearTimeout(problemSaveTimerRef.current);
         if (isAdmin && id) {
-            try {
-                await axios.put(`${API_BASE_URL}/api/environments/${id}/problem`, {
-                    problemStatement: newProblem
-                }, { headers: { Authorization: `Bearer ${token}` } });
-            } catch (err) {
-                console.error("Failed to update problem", err);
-            }
+            problemSaveTimerRef.current = setTimeout(async () => {
+                try {
+                    await axios.put(`${API_BASE_URL}/api/environments/${id}/problem`, {
+                        problemStatement: newProblem
+                    }, { headers: { Authorization: `Bearer ${token}` } });
+                } catch (err) {
+                    console.error("Failed to update problem", err);
+                    toast.error('Failed to save problem statement');
+                }
+            }, 800);
         }
     };
 

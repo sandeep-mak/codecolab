@@ -223,12 +223,24 @@ public class EnvironmentController {
             env.setIsExamMode(isExamMode);
             environmentRepository.save(env);
 
-            // Broadcast
+            // When enabling exam mode: lock all non-admin permissions to VIEWER
+            if (Boolean.TRUE.equals(isExamMode)) {
+                permissionService.lockAllToViewer(id);
+            }
+
+            // Broadcast EXAM_MODE_TOGGLED AND individual PERMISSION_UPDATED to every member
             List<EnvironmentPermission> members = permissionService.getPermissions(id);
             for (EnvironmentPermission perm : members) {
+                // Send their updated permission level
+                chatWebSocketHandler.sendEvent(perm.getUser().getId(), "PERMISSION_UPDATED", Map.of(
+                        "environmentId", id.toString(),
+                        "accessLevel", perm.getAccessLevel().toString()
+                ));
+                // Also send the exam mode toggle event so UI splits
                 chatWebSocketHandler.sendEvent(perm.getUser().getId(), "EXAM_MODE_TOGGLED", Map.of(
                         "environmentId", id.toString(),
-                        "isExamMode", isExamMode
+                        "isExamMode", isExamMode,
+                        "problemStatement", env.getProblemStatement() != null ? env.getProblemStatement() : ""
                 ));
             }
         }

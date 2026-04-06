@@ -173,7 +173,21 @@ public class EnvironmentPermissionController {
         auditService.logAction(requestor.getId(), "EXAMINEE_DELEGATED", environmentId.toString(),
                 "Delegated EXAMINEE role exclusively to user ID: " + examineeId);
 
-        // Broadcast to all users in the environment to refetch permissions
+        // Notify the examinee via Notification
+        try {
+            com.codecollab.server.model.Environment env = environmentRepository.findById(environmentId).orElse(null);
+            if (env != null) {
+                notificationService.createAndSend(
+                        examineeId,
+                        "📝 You've been assigned as Examinee in '" + env.getName() + "'. Read the problem statement and start coding!",
+                        "/editor/" + environmentId
+                );
+            }
+        } catch (Exception notifEx) {
+            notifEx.printStackTrace();
+        }
+
+        // Broadcast updated permissions to all users in the environment
         try {
             com.codecollab.server.handler.ChatWebSocketHandler chatWebSocketHandler = org.springframework.web.context.support.WebApplicationContextUtils
                     .getRequiredWebApplicationContext(
@@ -186,6 +200,12 @@ public class EnvironmentPermissionController {
                         "environmentId", environmentId.toString(),
                         "accessLevel", perm.getAccessLevel().toString()
                 ));
+                // Also send EXAMINEE_ASSIGNED so the assigned user gets a contextual UI prompt
+                if (perm.getUser().getId().equals(examineeId)) {
+                    chatWebSocketHandler.sendEvent(perm.getUser().getId(), "EXAMINEE_ASSIGNED", java.util.Map.of(
+                            "environmentId", environmentId.toString()
+                    ));
+                }
             }
         } catch (Exception wsEx) {
             wsEx.printStackTrace();
