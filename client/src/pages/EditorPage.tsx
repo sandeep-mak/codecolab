@@ -50,6 +50,11 @@ const EditorPage = () => {
     const [problemStatement, setProblemStatement] = useState('');
     const internalClipboard = useRef('');
     const problemSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    // Refs kept in sync with state so event listeners always see fresh values
+    const isExamModeRef = useRef(false);
+    const permissionRef = useRef<string | null>(null);
+    // Ref to sendMessage+id so DOM event listeners can call it without stale closure
+    const sendViolationRef = useRef<((violationType: string) => void) | null>(null);
 
     // UI State
     const [isCommunicationOpen, setIsCommunicationOpen] = useState(false);
@@ -67,6 +72,20 @@ const EditorPage = () => {
     const isReadOnly = permission === 'VIEWER';
     const isAdmin = permission === 'ADMIN';
     const canRun = permission === 'ADMIN';
+
+    // Keep refs in sync so DOM event listeners & Monaco callbacks always have fresh values
+    useEffect(() => { isExamModeRef.current = isExamMode; }, [isExamMode]);
+    useEffect(() => { permissionRef.current = permission; }, [permission]);
+    // Always keep violation sender fresh
+    useEffect(() => {
+        sendViolationRef.current = (violationType: string) => {
+            sendMessage({
+                type: 'EXAM_VIOLATION',
+                environmentId: id,
+                violationType
+            });
+        };
+    }, [sendMessage, id]);
 
     // Fetch Environment & Permissions
     useEffect(() => {
@@ -147,6 +166,13 @@ const EditorPage = () => {
                     style: { background: '#4f46e5', color: '#fff', fontWeight: 'bold' }
                 });
             }
+            // Real-time alert to admin about violations
+            if (data.type === 'EXAM_ALERT') {
+                toast.error(`⚠️ ${data.data.message}`, {
+                    duration: 8000,
+                    style: { background: '#7f1d1d', color: '#fca5a5', fontWeight: 'bold', border: '1px solid #dc2626' }
+                });
+            }
         });
         return () => unsubscribe();
     }, [id, subscribe, navigate]);
@@ -154,18 +180,15 @@ const EditorPage = () => {
     // Anti-Cheat: Visibility change tracking
     useEffect(() => {
         const handleVisibilityChange = () => {
-            if (document.hidden && isExamMode && permission === 'EDITOR') {
-                toast.error('Warning: Tab switching is recorded.', { duration: 5000 });
-                sendMessage({
-                    type: 'EXAM_VIOLATION',
-                    environmentId: id,
-                    violationType: 'switched tabs'
-                });
+            // Use refs so we always read current exam state, not stale closure
+            if (document.hidden && isExamModeRef.current && permissionRef.current === 'EDITOR') {
+                toast.error('🚫 Tab switch detected! This has been reported.', { duration: 5000 });
+                sendViolationRef.current?.('switched tabs');
             }
         };
-        document.addEventListener("visibilitychange", handleVisibilityChange);
-        return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-    }, [isExamMode, permission, id, sendMessage]);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, []); // Empty deps — uses refs, no re-registration needed
 
     const handleUpdateProblem = (newProblem: string) => {
         // Update local state immediately for a smooth typing experience
@@ -343,10 +366,10 @@ const EditorPage = () => {
         editorRef.current = editor;
         setEditorInstance(editor);
 
-        // Anti-Cheat: Paste restrictions
+        // Track what the user copies FROM WITHIN the editor via keyboard shortcut
         editor.onKeyDown((e: any) => {
-            // Log copy to internal clipboard (Cmd/Ctrl + C)
-            if ((e.metaKey || e.ctrlKey) && e.keyCode === 33 /* KeyCode.KeyC */) {
+            // KeyCode.KeyC = 33 in Monaco enum
+            if ((e.metaKey || e.ctrlKey) && e.keyCode === 33) {
                 const selection = editor.getSelection();
                 if (selection) {
                     internalClipboard.current = editor.getModel()?.getValueInRange(selection) || '';
@@ -354,27 +377,27 @@ const EditorPage = () => {
             }
         });
 
-        editor.onDidPaste((_e: any) => {
-            if (isExamMode && permission === 'EDITOR') {
-                navigator.clipboard.readText().then(text => {
-                    // Normalize text spaces to allow minor whitespace differences
-                    if (text.trim() !== internalClipboard.current.trim()) {
-                        // Undo the paste action
-                        editor.trigger('keyboard', 'undo', null);
-                        toast.error("Pasting from external sources is disabled in Exam Mode.", { duration: 5000 });
-                        sendMessage({
-                            type: 'EXAM_VIOLATION',
-                            environmentId: id,
-                            violationType: 'pasted external code'
-                        });
-                    }
-                }).catch(_err => {
-                    // Browser might block clipboard API
-                    editor.trigger('keyboard', 'undo', null);
-                    toast.error("Pasting is strictly disabled securely.");
-                });
-            }
-        });
+        // DOM-level paste interception — fires BEFORE Monaco processes the paste,
+        // so preventDefault() actually cancels the insertion.
+        // We must use refs here because this callback is only created once (not re-created per render).
+        const editorDom = editor.getDomNode();
+        if (editorDom) {
+            editorDom.addEventListener('paste', (e: Event) => {
+                const clipboardEvent = e as ClipboardEvent;
+                if (!isExamModeRef.current || permissionRef.current !== 'EDITOR') return;
+
+                const pastedText = clipboardEvent.clipboardData?.getData('text/plain') || '';
+
+                // Allow paste only if the text matches what was copied from WITHIN the editor
+                if (pastedText.trim() !== '' && pastedText.trim() !== internalClipboard.current.trim()) {
+                    clipboardEvent.preventDefault();
+                    clipboardEvent.stopPropagation();
+                    toast.error('🚫 External paste is blocked in Exam Mode.', { duration: 5000 });
+                    // Notify backend — sendMessageRef is used so the violation is sent with the current envId
+                    sendViolationRef.current?.('pasted external code');
+                }
+            }, true); // useCapture = true to intercept before Monaco
+        }
     };
 
     // Run Code

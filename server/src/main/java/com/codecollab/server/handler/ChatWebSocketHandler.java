@@ -281,7 +281,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     private void handleExamViolation(WebSocketSession session, Map<String, Object> payload) {
         String envIdStr = payload.get("environmentId") != null ? payload.get("environmentId").toString() : null;
-        String violationType = payload.get("violationType") != null ? payload.get("violationType").toString() : "switched tabs";
+        String violationType = payload.get("violationType") != null ? payload.get("violationType").toString() : "suspicious activity";
 
         UUID senderId = null;
         for (Map.Entry<UUID, Set<WebSocketSession>> entry : userSessions.entrySet()) {
@@ -300,11 +300,20 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             UUID envId = UUID.fromString(envIdStr);
             java.util.List<com.codecollab.server.model.EnvironmentPermission> perms = permissionService.getPermissions(envId);
 
-            String message = sender.getUsername() + " " + violationType + " during the exam!";
+            String alertMessage = "⚠️ " + sender.getUsername() + " " + violationType + " during the exam!";
 
             for (com.codecollab.server.model.EnvironmentPermission p : perms) {
                 if (p.getAccessLevel() == com.codecollab.server.model.EnvironmentPermission.AccessLevel.ADMIN) {
-                    notificationService.createAndSend(p.getUser().getId(), message, "/editor/" + envId.toString());
+                    // 1. Persistent notification (bell/history)
+                    notificationService.createAndSend(p.getUser().getId(), alertMessage, "/editor/" + envId);
+
+                    // 2. Real-time EXAM_ALERT event so admin sees an immediate toast on screen
+                    sendEvent(p.getUser().getId(), "EXAM_ALERT", java.util.Map.of(
+                            "message", alertMessage,
+                            "examinee", sender.getUsername(),
+                            "violationType", violationType,
+                            "environmentId", envId.toString()
+                    ));
                 }
             }
         } catch (Exception e) {
