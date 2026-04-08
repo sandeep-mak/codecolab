@@ -141,14 +141,15 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({ environmentId, 
                 // Server sends existing voice users when we JOIN_VOICE
                 // We (the joiner) initiate connections to each of them
                 if (!streamRef.current) break;
-                const existingUsers: { sessionId: string; userId: string }[] = message.voiceUsers || [];
+                const existingUsers: { sessionId: string; userId: string; username?: string }[] = message.voiceUsers || [];
                 console.log('[Voice] Existing voice users:', existingUsers);
                 for (const voiceUser of existingUsers) {
                     if (!peersRef.current.find(p => p.sessionId === voiceUser.sessionId)) {
-                        console.log('[Voice] Initiating peer to existing user:', voiceUser.sessionId);
+                        console.log('[Voice] Initiating peer to existing user:', voiceUser.sessionId, voiceUser.username);
+                        const resolvedUsername = voiceUser.username || 'User';
                         const peer = createPeer(voiceUser.sessionId, streamRef.current!);
-                        peersRef.current.push({ sessionId: voiceUser.sessionId, username: 'User', peer });
-                        setVoiceUsers(prev => [...prev, { sessionId: voiceUser.sessionId, username: 'User' }]);
+                        peersRef.current.push({ sessionId: voiceUser.sessionId, username: resolvedUsername, peer });
+                        setVoiceUsers(prev => [...prev, { sessionId: voiceUser.sessionId, username: resolvedUsername }]);
                     }
                 }
                 break;
@@ -491,10 +492,15 @@ const AudioPlayer = ({ stream }: { stream: MediaStream }) => {
     const audioRef = useRef<HTMLAudioElement>(null);
     useEffect(() => {
         if (audioRef.current && stream) {
+            // Assign stream to audio element for playback
             audioRef.current.srcObject = stream;
+            // Ensure autoplay is triggered correctly after srcObject assignment
+            audioRef.current.play().catch(err => {
+                console.warn('[Voice] Audio autoplay blocked, user gesture needed:', err);
+            });
         }
-    }, [stream]);
-    return <audio ref={audioRef} autoPlay />;
+    }, [stream]); // Re-run whenever the stream reference changes
+    return <audio ref={audioRef} autoPlay playsInline />;
 };
 
 export default CommunicationPanel;

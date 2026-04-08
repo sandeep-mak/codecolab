@@ -22,6 +22,9 @@ public class SignalingWebSocketHandler extends TextWebSocketHandler {
     // Map<SessionId, UserId>
     private final Map<String, UUID> sessionUserMap = new ConcurrentHashMap<>();
 
+    // Map<SessionId, Username> — stored when user joins voice so we can include username in VOICE_USERS_LIST
+    private final Map<String, String> sessionUsernameMap = new ConcurrentHashMap<>();
+
     // Map<SessionId, EnvironmentId>
     private final Map<String, String> sessionRoomMap = new ConcurrentHashMap<>();
 
@@ -59,6 +62,7 @@ public class SignalingWebSocketHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         String roomId = sessionRoomMap.remove(session.getId());
         UUID userId = sessionUserMap.remove(session.getId());
+        sessionUsernameMap.remove(session.getId()); // Clean up username mapping
 
         if (roomId != null) {
             Set<WebSocketSession> room = rooms.get(roomId);
@@ -141,14 +145,20 @@ public class SignalingWebSocketHandler extends TextWebSocketHandler {
             // Add this session to the voice set for this room
             Set<String> voiceSet = voiceUsers.computeIfAbsent(roomId, k -> ConcurrentHashMap.newKeySet());
 
+            // Store the sender's username so it can be included in VOICE_USERS_LIST
+            String senderName = (String) payload.getOrDefault("senderName", "Unknown");
+            sessionUsernameMap.put(session.getId(), senderName);
+
             // Collect existing voice participants BEFORE adding self
             List<Map<String, String>> existingVoiceUsers = new ArrayList<>();
             for (String existingSessionId : voiceSet) {
                 UUID existingUserId = sessionUserMap.get(existingSessionId);
+                String existingUsername = sessionUsernameMap.getOrDefault(existingSessionId, "User");
                 if (existingUserId != null) {
                     existingVoiceUsers.add(Map.of(
                             "sessionId", existingSessionId,
-                            "userId", existingUserId.toString()
+                            "userId", existingUserId.toString(),
+                            "username", existingUsername
                     ));
                 }
             }
@@ -163,7 +173,6 @@ public class SignalingWebSocketHandler extends TextWebSocketHandler {
             sendMessage(session, listMsg);
 
             // Broadcast JOIN_VOICE to existing voice users so they answer our offer
-            String senderName = (String) payload.getOrDefault("senderName", "Unknown");
             Map<String, Object> joinMsg = Map.of(
                     "type", "JOIN_VOICE",
                     "senderId", session.getId(),   // Always use session ID

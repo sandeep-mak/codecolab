@@ -154,8 +154,10 @@ const ShareModal = ({ environmentId, isOpen, onClose }: ShareModalProps) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-slate-900 border border-slate-700 rounded-lg w-full max-w-md p-6 relative shadow-2xl">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-slate-900 border border-slate-700 rounded-lg w-full max-w-md relative shadow-2xl flex flex-col max-h-[90vh]">
+                {/* Scrollable content wrapper */}
+                <div className="overflow-y-auto flex-1 p-6">
                 <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-white">
                     <X size={20} />
                 </button>
@@ -302,6 +304,7 @@ const ShareModal = ({ environmentId, isOpen, onClose }: ShareModalProps) => {
                 ) : (
                     <AuditLogViewer environmentId={environmentId} token={token || ''} />
                 )}
+                </div> {/* end scrollable content */}
             </div>
         </div>
     );
