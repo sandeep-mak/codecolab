@@ -10,6 +10,8 @@ import { toast } from 'react-hot-toast';
 const Login = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
+    const [shake, setShake] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
@@ -17,7 +19,8 @@ const Login = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        e.preventDefault();
+        setErrorMessage('');
+        setShake(false);
         try {
             const response = await axios.post(`${API_BASE_URL}/api/auth/login`, {
                 username,
@@ -31,7 +34,10 @@ const Login = () => {
         } catch (err: any) {
             console.error("Login error:", err);
             const message = err.response?.data?.message || err.message || 'Login failed';
-            toast.error(message);
+            
+            setErrorMessage(message);
+            setShake(true);
+            setTimeout(() => setShake(false), 500); // Remove shake class after animation completes
         }
     };
 
@@ -39,7 +45,14 @@ const Login = () => {
         <div className="min-h-screen flex items-center justify-center bg-slate-950">
             <div className="bg-slate-900 p-8 rounded-lg shadow-xl w-96 border border-slate-800">
                 <h2 className="text-2xl font-bold mb-6 text-center text-white">Login to CodeColab</h2>
-                <form onSubmit={handleSubmit} className="space-y-4">
+                
+                {errorMessage && (
+                    <div className="mb-4 bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-md text-sm text-center">
+                        {errorMessage}
+                    </div>
+                )}
+                
+                <form onSubmit={handleSubmit} className={`space-y-4 ${shake ? 'animate-shake' : ''}`}>
                     <div>
                         <label className="block text-sm font-medium text-slate-300">Username</label>
                         <div className="mt-1 relative rounded-md shadow-sm">
