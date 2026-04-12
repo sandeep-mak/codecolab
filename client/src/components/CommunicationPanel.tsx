@@ -312,7 +312,10 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({ environmentId, 
                                         <span className="text-sm text-slate-200">{user.username} (You)</span>
                                     </div>
                                 )}
-                                {voiceUsers.map(vu => (
+                                {voiceUsers
+                                    .filter(vu => vu.username !== user.username) // Don't show myself recursively
+                                    .filter((vu, i, self) => self.findIndex(t => t.username === vu.username) === i) // Unique by username
+                                    .map(vu => (
                                     <div key={vu.sessionId} className="flex items-center gap-3 bg-slate-800/40 p-2.5 rounded-lg border border-slate-700/30">
                                         <div className="w-2 h-2 rounded-full bg-green-400" />
                                         <span className="text-sm text-slate-200">{vu.username}</span>

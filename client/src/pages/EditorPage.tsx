@@ -386,16 +386,11 @@ const EditorPage = () => {
                 const clipboardEvent = e as ClipboardEvent;
                 if (!isExamModeRef.current || permissionRef.current !== 'EDITOR') return;
 
-                const pastedText = clipboardEvent.clipboardData?.getData('text/plain') || '';
-
-                // Allow paste only if the text matches what was copied from WITHIN the editor
-                if (pastedText.trim() !== '' && pastedText.trim() !== internalClipboard.current.trim()) {
-                    clipboardEvent.preventDefault();
-                    clipboardEvent.stopPropagation();
-                    toast.error('🚫 External paste is blocked in Exam Mode.', { duration: 5000 });
-                    // Notify backend — sendMessageRef is used so the violation is sent with the current envId
-                    sendViolationRef.current?.('pasted external code');
-                }
+                clipboardEvent.preventDefault();
+                clipboardEvent.stopPropagation();
+                toast.error('🚫 Pasting is disabled in Exam Mode.', { duration: 5000 });
+                // Notify backend — sendMessageRef is used so the violation is sent with the current envId
+                sendViolationRef.current?.('attempted to paste code');
             }, true); // useCapture = true to intercept before Monaco
         }
     };
