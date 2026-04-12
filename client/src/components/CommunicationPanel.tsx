@@ -88,7 +88,7 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({ environmentId, 
     }, []);
 
     const createPeer = (targetSessionId: string, stream: MediaStream): SimplePeer.Instance => {
-        const peer = new SimplePeer({ initiator: true, trickle: true, config: ICE_SERVERS, stream });
+        const peer = new SimplePeer({ initiator: true, trickle: false, config: ICE_SERVERS, stream });
 
         peer.on('signal', (data) => {
             if (wsRef.current?.readyState === WebSocket.OPEN) {
@@ -115,7 +115,7 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({ environmentId, 
     };
 
     const addPeer = (senderSessionId: string, incomingSignal: any, stream: MediaStream): SimplePeer.Instance => {
-        const peer = new SimplePeer({ initiator: false, trickle: true, config: ICE_SERVERS, stream });
+        const peer = new SimplePeer({ initiator: false, trickle: false, config: ICE_SERVERS, stream });
 
         peer.on('signal', (data) => {
             if (wsRef.current?.readyState === WebSocket.OPEN) {
