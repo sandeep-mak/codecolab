@@ -190,6 +190,26 @@ const EditorPage = () => {
         return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
     }, []); // Empty deps — uses refs, no re-registration needed
 
+    // Anti-Cheat: Global Paste interception via Window Capture Phase
+    useEffect(() => {
+        const handleGlobalPaste = (e: Event) => {
+            if (!isExamModeRef.current || permissionRef.current !== 'EDITOR') return;
+            
+            const target = e.target as HTMLElement;
+            // Only block if they are trying to paste into the Monaco Editor
+            if (target && target.closest('.monaco-editor')) {
+                e.preventDefault();
+                e.stopPropagation();
+                toast.error('🚫 Pasting is strictly blocked in Exam Mode.', { duration: 5000 });
+                sendViolationRef.current?.('attempted to paste code');
+            }
+        };
+        
+        // Capture Phase guarantees this runs before Monaco's internal textarea gets it
+        window.addEventListener('paste', handleGlobalPaste, true);
+        return () => window.removeEventListener('paste', handleGlobalPaste, true);
+    }, []);
+
     const handleUpdateProblem = (newProblem: string) => {
         // Update local state immediately for a smooth typing experience
         setProblemStatement(newProblem);
@@ -375,24 +395,18 @@ const EditorPage = () => {
                     internalClipboard.current = editor.getModel()?.getValueInRange(selection) || '';
                 }
             }
+            
+            // Backup protection: Override Ctrl+V / Cmd+V
+            // KeyCode.KeyV = 52 in Monaco enum
+            if ((e.metaKey || e.ctrlKey) && e.keyCode === 52) {
+                if (isExamModeRef.current && permissionRef.current === 'EDITOR') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toast.error('🚫 Pasting is strictly blocked in Exam Mode.', { duration: 5000 });
+                    sendViolationRef.current?.('attempted to paste code');
+                }
+            }
         });
-
-        // DOM-level paste interception — fires BEFORE Monaco processes the paste,
-        // so preventDefault() actually cancels the insertion.
-        // We must use refs here because this callback is only created once (not re-created per render).
-        const editorDom = editor.getDomNode();
-        if (editorDom) {
-            editorDom.addEventListener('paste', (e: Event) => {
-                const clipboardEvent = e as ClipboardEvent;
-                if (!isExamModeRef.current || permissionRef.current !== 'EDITOR') return;
-
-                clipboardEvent.preventDefault();
-                clipboardEvent.stopPropagation();
-                toast.error('🚫 Pasting is disabled in Exam Mode.', { duration: 5000 });
-                // Notify backend — sendMessageRef is used so the violation is sent with the current envId
-                sendViolationRef.current?.('attempted to paste code');
-            }, true); // useCapture = true to intercept before Monaco
-        }
     };
 
     // Run Code
